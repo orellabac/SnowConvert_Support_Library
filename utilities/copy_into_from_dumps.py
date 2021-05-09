@@ -27,5 +27,5 @@ for dirpath, dirnames, files in os.walk(arguments.inputFolder):
             target_file_name = os.path.join(arguments.copyintoFolder, database + "." + table_name + ".sql")
             with open(target_file_name,"w") as f:
                 f.write(f""" PUT file://{full_name} INTO @{database}.%{table_name}; \n""")
-                f.write(f""" COPY INTO {database}.{table_name} FROM @{database}.%{table_name} FILE_FORMAT=(TYPE=CSV); \n""")
+                f.write(f""" COPY INTO {database}.{table_name} FROM @{database}.%{table_name} FILE_FORMAT=(TYPE=CSV TRIM_SPACE=TRUE); \n""")
 print("Done")                
