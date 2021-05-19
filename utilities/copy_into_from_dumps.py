@@ -2,7 +2,7 @@ import os
 import argparse
 
 
-arguments_parser = argparse.ArgumentParser(description="Generate COPY Into scripts from Teradata DataDumps. Given a folder with some DataDumps a set of COPY INTO scripts to load into snowflake are generated")
+arguments_parser = argparse.ArgumentParser(description="Generate COPY Into scripts from Teradata DataDumps. Given a folder with some DataDumps generates a set of COPY INTO scripts to load into snowflake are generated")
 arguments_parser.add_argument('--inputFolder', required=True, help='Folder with Datadumps')
 arguments_parser.add_argument('--copyintoFolder', required=True, help='Folder for copyinto files')
 arguments_parser.add_argument('--database', required=False, help='Teradata Database to filter. If missing all databases in the dump will be considered')
