@@ -1,3 +1,22 @@
+-- <copyright file="INTERVAL_UDF.cs" company="Mobilize.Net">
+--        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
+-- 
+--        This file is part of the Mobilize Frameworks, which is
+--        proprietary and confidential.
+-- 
+--        NOTICE:  All information contained herein is, and remains
+--        the property of Mobilize.Net Corporation.
+--        The intellectual and technical concepts contained herein are
+--        proprietary to Mobilize.Net Corporation and may be covered
+--        by U.S. Patents, and are protected by trade secret or copyright law.
+--        Dissemination of this information or reproduction of this material
+--        is strictly forbidden unless prior written permission is obtained
+--        from Mobilize.Net Corporation.
+-- </copyright>
+
+-- =============================================
+-- Description: UDF for Teradata INTERVAL2MONTHS function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL2MONTHS_UDF
 (INPUT_VALUE VARCHAR())
 RETURNS INTEGER 
@@ -12,7 +31,9 @@ ELSE
 END
 $$;
 
--
+-- =============================================
+-- Description: UDF for Teradata INTERVAL2SECONDS function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL2SECONDS_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE VARCHAR())
 RETURNS DECIMAL(20,6) 
@@ -67,7 +88,9 @@ ELSE
 END
 $$;
 
-
+-- =============================================
+-- Description: UDF for Teradata MONTHS2INTERVAL function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.MONTHS2INTERVAL_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE NUMBER)
 RETURNS VARCHAR
@@ -80,7 +103,9 @@ DECODE(INPUT_PART,
 )
 $$;
 
-
+-- =============================================
+-- Description: UDF for Teradata SECONDS2INTERVAL function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.SECONDS2INTERVAL_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE NUMBER)
 RETURNS VARCHAR
@@ -131,7 +156,9 @@ DECODE(INPUT_PART,
 )
 $$;
 
-
+-- =============================================
+-- Description: UDF for Teradata INTERVAL_MULTIPLY function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL_MULTIPLY_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE VARCHAR(), INPUT_MULT INTEGER)
 RETURNS VARCHAR
@@ -143,7 +170,9 @@ ELSE PUBLIC.SECONDS2INTERVAL_UDF(INPUT_PART, PUBLIC.INTERVAL2SECONDS_UDF(INPUT_P
 END
 $$;
 
-
+-- =============================================
+-- Description: UDF for Teradata INTERVAL_ADD function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL_ADD_UDF
 (INPUT_VALUE1 VARCHAR(), INPUT_PART1 VARCHAR(30), INPUT_VALUE2 VARCHAR(), INPUT_PART2 VARCHAR(30), OP CHAR, OUTPUT_PART VARCHAR())
 RETURNS VARCHAR

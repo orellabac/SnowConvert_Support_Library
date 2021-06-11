@@ -1,10 +1,10 @@
 
 # Definition and Usage
-The JULIAN_TO_DATE() function takes a valid julian DATE string (YYYYDDD) and returns the DATE it represents, otherwise NULL.
+The JULIAN_TO_DATE_UDF() function takes a valid julian DATE string (YYYYDDD) and returns the DATE it represents, otherwise NULL.
 
 
 ## Syntax
-`JULIAN_TO_DATE(julian_date)`
+`JULIAN_TO_DATE_UDF(julian_date)`
 
 ## Parameter Values
 | Parameter	    | Description |
@@ -16,7 +16,7 @@ The JULIAN_TO_DATE() function takes a valid julian DATE string (YYYYDDD) and ret
 > Credit goes to James Demitriou
 
 ```sql
-CREATE OR REPLACE FUNCTION PUBLIC.JULIAN_TO_DATE(julian_date CHAR(7))
+CREATE OR REPLACE FUNCTION PUBLIC.JULIAN_TO_DATE_UDF(julian_date CHAR(7))
   RETURNS DATE  
 AS
 $$
@@ -42,13 +42,13 @@ $$;
 ```
  
 ```sql
-select JULIAN_TO_DATE('2020000');   -- Returns null, invalid date
-select JULIAN_TO_DATE('2020001');   -- Returns 2020-01-01
-select JULIAN_TO_DATE('1900365');   -- Returns 1900-12-31
-select JULIAN_TO_DATE('1903366');   -- Returns null, invalid date 
-select JULIAN_TO_DATE('1900365');   -- Returns 1900-12-31 (century, no leap year)
-select JULIAN_TO_DATE('1904060');   -- Returns 1904-02-29, valid leap year
-select JULIAN_TO_DATE('1903060');   -- Returns 1903-03-01, non-leap year
-select JULIAN_TO_DATE('2000366');   -- Returns 2000-12-31 (millenia, valid leap year)
-select JULIAN_TO_DATE('2004366');   -- Returns 2004-12-31, valid leap year
+select JULIAN_TO_DATE_UDF('2020000');   -- Returns null, invalid date
+select JULIAN_TO_DATE_UDF('2020001');   -- Returns 2020-01-01
+select JULIAN_TO_DATE_UDF('1900365');   -- Returns 1900-12-31
+select JULIAN_TO_DATE_UDF('1903366');   -- Returns null, invalid date 
+select JULIAN_TO_DATE_UDF('1900365');   -- Returns 1900-12-31 (century, no leap year)
+select JULIAN_TO_DATE_UDF('1904060');   -- Returns 1904-02-29, valid leap year
+select JULIAN_TO_DATE_UDF('1903060');   -- Returns 1903-03-01, non-leap year
+select JULIAN_TO_DATE_UDF('2000366');   -- Returns 2000-12-31 (millenia, valid leap year)
+select JULIAN_TO_DATE_UDF('2004366');   -- Returns 2004-12-31, valid leap year
 ```

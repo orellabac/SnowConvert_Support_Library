@@ -1,4 +1,4 @@
--- <copyright file="JULIAN_TO_DATE.cs" company="Mobilize.Net">
+-- <copyright file="JULIAN_TO_DATE_UDF.cs" company="Mobilize.Net">
 --        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
 -- 
 --        This file is part of the Mobilize Frameworks, which is
@@ -17,7 +17,7 @@
 -- =========================================================================================================
 -- Description: Given a valid julian DATE string (YYYYDDD), returns the DATE it represents, otherwise NULL.
 -- =========================================================================================================
-CREATE OR REPLACE FUNCTION PUBLIC.JULIAN_TO_DATE(julian_date CHAR(7))
+CREATE OR REPLACE FUNCTION PUBLIC.JULIAN_TO_DATE_UDF(julian_date CHAR(7))
   RETURNS DATE  
 AS
 $$
