@@ -15,7 +15,7 @@
 -- </copyright>
 
 -- =============================================
--- Description: UDF for Oracle MONTHS_BETWEEN function
+-- Description: UDF for Teradata MONTHS_BETWEEN function
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.MONTHS_BETWEEN_UDF(INPUT_1 TIMESTAMP_LTZ, INPUT_2 TIMESTAMP_LTZ)
 RETURNS NUMBER(20,6)
@@ -50,7 +50,7 @@ $$
 ;
 
 -- =============================================
--- Description: UDF for Oracle TRUNC (date) function
+-- Description: UDF for Teradata TRUNC (date) function
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.TRUNC_DATE_UDF(INPUT TIMESTAMP_LTZ, FMT VARCHAR(5))
 RETURNS DATE
@@ -91,7 +91,7 @@ $$
 ;
 
 -- =============================================
--- Description: UDF for Oracle ROUND (date) function
+-- Description: UDF for Teradata ROUND (date) function
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.ROUND_DATE_UDF(INPUT TIMESTAMP_LTZ, FMT VARCHAR(5))
 RETURNS DATE
