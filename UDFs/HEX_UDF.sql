@@ -1,4 +1,4 @@
--- <copyright file="SUBSTR_TD_UDF.cs" company="Mobilize.Net">
+﻿-- <copyright file="HEX_UDF.cs" company="Mobilize.Net">
 --        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
 -- 
 --        This file is part of the Mobilize Frameworks, which is
@@ -15,34 +15,12 @@
 -- </copyright>
 
 -- =============================================
--- Description: UDF for Teradata SUBSTR function
+-- Description: UDF for Teradata CHAR2HEXINT function
 -- =============================================
-CREATE OR REPLACE FUNCTION PUBLIC.SUBSTR_TD_UDF(base_exp string, startpos float, length float)
-  RETURNS string
+CREATE OR REPLACE FUNCTION PUBLIC.CHAR2HEXINT_UDF (IN_STR VARCHAR)
+  RETURNS VARCHAR
   LANGUAGE JAVASCRIPT
-AS
-$$
-  if ( STARTPOS > 0 ) {
-      return BASE_EXP.substr(STARTPOS -1, LENGTH   );
-  } else if (STARTPOS == 0 ) {
-      return BASE_EXP.substr(STARTPOS , LENGTH  - 1 );
-  } else {
-      return BASE_EXP.substr(0, LENGTH + STARTPOS  -  1 );
-  }
- 
+AS $$
+  return IN_STR.split('').map( e => "00" + e.charCodeAt(0).toString(16) ).join('');
 $$
 ;
-
-CREATE OR REPLACE FUNCTION PUBLIC.SUBSTR_TD_UDF(base_exp string, startpos float )
-  RETURNS string
-  LANGUAGE JAVASCRIPT
-AS
-$$
-  if ( STARTPOS > 0 ) {
-      return BASE_EXP.substr(STARTPOS -1   );
-  }  else {
-      return BASE_EXP.substr( 0  );
-  }
- 
-$$
-;  

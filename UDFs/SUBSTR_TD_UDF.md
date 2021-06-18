@@ -1,10 +1,10 @@
 
 # Definition and Usage
- It returns a substring from the given string, starting at the startpos index. SUBSTR_TD() function is equivalent to Teradata SUBSTR() when the startpos is lower or equal than zero. For all other cases, the internal function of Snowflake SUBSTR() is used.
+ It returns a substring from the given string, starting at the startpos index. SUBSTR_TD_UDF() function is equivalent to Teradata SUBSTR() when the startpos is lower or equal than zero. For all other cases, the internal function of Snowflake SUBSTR() is used.
 
 
 ## Syntax
-`SUBSTR_TD(julian_date)`
+`SUBSTR_TD_UDF(julian_date)`
 
 ## Parameter Values
 | Parameter	    | Description |
@@ -18,7 +18,7 @@
 > Credit goes to Mike Gohl
 
 ```sql
-CREATE OR REPLACE FUNCTION PUBLIC.SUBSTR_TD(base_exp string, startpos float, length float)
+CREATE OR REPLACE FUNCTION PUBLIC.SUBSTR_TD_UDF(base_exp string, startpos float, length float)
   RETURNS string
   LANGUAGE JAVASCRIPT
 AS
@@ -34,7 +34,7 @@ $$
 $$
 ;
 
-CREATE OR REPLACE FUNCTION PUBLIC.SUBSTR_TD(base_exp string, startpos float )
+CREATE OR REPLACE FUNCTION PUBLIC.SUBSTR_TD_UDF(base_exp string, startpos float )
   RETURNS string
   LANGUAGE JAVASCRIPT
 AS
@@ -47,14 +47,16 @@ $$
  
 $$;
 ```
- 
+
+  ## Examples 
+
 ```sql
-SELECT SUBSTR_TD('ABCDE',-1,1); 	-- Returns empty string
-SELECT SUBSTR_TD('ABCDE',-1,2); 	-- Returns empty string
-SELECT SUBSTR_TD('ABCDE',-1,3); 	-- Returns 'A'
-SELECT SUBSTR_TD('ABCDE',-1,4); 	-- Returns 'AB'
-SELECT SUBSTR_TD('ABCDE',0,1); 		-- Returns empty string
-SELECT SUBSTR_TD('ABCDE',0,2); 		-- Returns 'A'
-SELECT SUBSTR_TD('ABCDE',0,3); 		-- Returns 'AB'
-SELECT SUBSTR_TD('ABCDE',0,4); 		-- Returns 'ABC'
+SELECT SUBSTR_TD_UDF('ABCDE',-1,1); 	-- Returns empty string
+SELECT SUBSTR_TD_UDF('ABCDE',-1,2); 	-- Returns empty string
+SELECT SUBSTR_TD_UDF('ABCDE',-1,3); 	-- Returns 'A'
+SELECT SUBSTR_TD_UDF('ABCDE',-1,4); 	-- Returns 'AB'
+SELECT SUBSTR_TD_UDF('ABCDE',0,1); 		-- Returns empty string
+SELECT SUBSTR_TD_UDF('ABCDE',0,2); 		-- Returns 'A'
+SELECT SUBSTR_TD_UDF('ABCDE',0,3); 		-- Returns 'AB'
+SELECT SUBSTR_TD_UDF('ABCDE',0,4); 		-- Returns 'ABC'
 ```

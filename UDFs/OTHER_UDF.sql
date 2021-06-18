@@ -1,12 +1,26 @@
-/******************************************************/
-/******************* OTHER UDFS ***********************/
-/******************************************************/
+-- <copyright file="OTHER_UDF.cs" company="Mobilize.Net">
+--        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
+-- 
+--        This file is part of the Mobilize Frameworks, which is
+--        proprietary and confidential.
+-- 
+--        NOTICE:  All information contained herein is, and remains
+--        the property of Mobilize.Net Corporation.
+--        The intellectual and technical concepts contained herein are
+--        proprietary to Mobilize.Net Corporation and may be covered
+--        by U.S. Patents, and are protected by trade secret or copyright law.
+--        Dissemination of this information or reproduction of this material
+--        is strictly forbidden unless prior written permission is obtained
+--        from Mobilize.Net Corporation.
+-- </copyright>
 
-----------
+-- =============================================
+-- Description: UDF for Oracle MONTHS_BETWEEN function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.MONTHS_BETWEEN_UDF(INPUT_1 TIMESTAMP_LTZ, INPUT_2 TIMESTAMP_LTZ)
 RETURNS NUMBER(20,6)
 AS
-'
+$$
 CASE WHEN DAY(INPUT_2) <= DAY(INPUT_1) 
            THEN TIMESTAMPDIFF(MONTH,INPUT_2,INPUT_1) 
             ELSE TIMESTAMPDIFF(MONTH,INPUT_2,INPUT_1) - 1 
@@ -32,14 +46,16 @@ END / (24*31)) +
      WHEN MINUTE(INPUT_2) <= MINUTE(INPUT_1) THEN MINUTE(INPUT_1) - MINUTE(INPUT_2) 
      ELSE 24 - HOUR(INPUT_2) + MINUTE(INPUT_1) 
 END / (24*60*60*31))
-'
+$$
 ;
 
-----------
+-- =============================================
+-- Description: UDF for Oracle TRUNC (date) function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.TRUNC_DATE_UDF(INPUT TIMESTAMP_LTZ, FMT VARCHAR(5))
 RETURNS DATE
 AS
-'
+$$
 CAST(CASE 
 WHEN FMT IN ('CC','SCC') THEN DATE_FROM_PARTS(CAST(LEFT(CAST(YEAR(INPUT) as CHAR(4)),2) || '00' as INTEGER),1,1)
 WHEN FMT IN ('SYYYY','YYYY','YEAR','SYEAR','YYY','YY','Y') THEN DATE_FROM_PARTS(YEAR(INPUT),1,1)
@@ -71,14 +87,16 @@ WHEN FMT IN ('DAY', 'DY','D') THEN DATEADD(DAY, 0-DAYOFWEEK(INPUT), INPUT)
 WHEN FMT IN ('HH', 'HH12','HH24') THEN INPUT
 WHEN FMT IN ('MI') THEN INPUT
 END AS DATE)
-'
+$$
 ;
 
-----------
+-- =============================================
+-- Description: UDF for Oracle ROUND (date) function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.ROUND_DATE_UDF(INPUT TIMESTAMP_LTZ, FMT VARCHAR(5))
 RETURNS DATE
 AS
-'
+$$
 CAST(
 CASE 
     WHEN FMT IN ('CC','SCC') THEN 
@@ -167,17 +185,21 @@ CASE
     WHEN FMT IN ('HH', 'HH12','HH24') THEN INPUT
     WHEN FMT IN ('MI') THEN INPUT
 END AS DATE)
-';
-
-CREATE OR REPLACE FUNCTION PUBLIC.DATE_TO_INT_UDF(INPUT_1 TIMESTAMP_LTZ)
-RETURNS NUMBER(7,0)
-AS
-$$
-(YEAR(INPUT_1) - 1900) * 10000 + 
-MONTH(INPUT_1) * 100 + 
-DAY(INPUT_1)
 $$;
 
+-- =============================================
+-- Description: UDF for Teradata DATE-TO-NUMERIC function
+-- =============================================
+create function PUBLIC.DATE_TO_INT_UDF(datecol date)
+returns int
+as
+$$
+select  (extract(year from datecol) - 1900) * 10000 + (extract(month from datecol) * 100) + (extract(day from datecol))
+$$;
+
+-- =============================================
+-- Description: UDF for Teradata NUMERIC-TO-DATE function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INT_TO_DATE_UDF(INPUT_1 INTEGER)
 RETURNS DATE
 AS
@@ -185,6 +207,9 @@ $$
 TO_DATE(CAST(INPUT_1+19000000 AS CHAR(8)), 'YYYYMMDD')
 $$;
 
+-- =============================================
+-- Description: UDF for handle TIMESTAMP ADD operation
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.TIMESTAMP_ADD_UDF(A TIMESTAMP_LTZ, B TIMESTAMP_LTZ)
 RETURNS TIMESTAMP
 AS
@@ -192,6 +217,9 @@ $$
 TIMESTAMPADD(YEAR, YEAR(B), TIMESTAMPADD(MONTH, MONTH(B), TIMESTAMPADD(DAY, DAY(B), TIMESTAMPADD(SECOND, SECOND(B), TIMESTAMPADD(MINUTE, MINUTE(B), TIMESTAMPADD(HOUR, HOUR(B), A))))))
 $$;
 
+-- =============================================
+-- Description: UDF for handle DATE ADD operation
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.DATE_ADD_UDF(A DATE, B DATE)
 RETURNS DATE
 AS
@@ -200,7 +228,10 @@ $$
 $$
 ;
 
-CREATE OR REPLACE FUNCTION PUBLIC.DAY_OF_WEEK_LONG(VAL2 timestamp)
+-- =============================================
+-- Description: Function for getting the complete day name in English given a timestamp.
+-- =============================================
+CREATE OR REPLACE FUNCTION PUBLIC.DAY_OF_WEEK_LONG_UDF(VAL2 timestamp)
 RETURNS VARCHAR(16777216)
 LANGUAGE SQL
 AS
@@ -215,7 +246,10 @@ $$
          ,'None')
 $$;
 
-CREATE OR REPLACE FUNCTION PUBLIC.MONTH_NAME_LONG(VAL2 timestamp)
+-- =============================================
+-- Description: Function for getting the complete month name in English given a timestamp.
+-- =============================================
+CREATE OR REPLACE FUNCTION PUBLIC.MONTH_NAME_LONG_UDF(VAL2 timestamp)
 RETURNS VARCHAR(16777216)
 LANGUAGE SQL
 AS
@@ -236,12 +270,13 @@ $$
          ,'None')
 $$;
 
+-- =============================================
+-- Description: UDF for Teradata NULLIFZERO function
+-- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.NULLIFZERO_UDF(VAL2 NUMBER)
 RETURNS NUMBER
 LANGUAGE SQL
 AS
 $$
-    decode(val2)
-         , 0 , NULL
-         ,val2)
+    decode(val2 , 0, NULL, val2)
 $$;
