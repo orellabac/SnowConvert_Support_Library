@@ -40,7 +40,9 @@ $$
     END
 $$;
 ```
- 
+
+ ## Examples 
+
 ```sql
 select JULIAN_TO_DATE_UDF('2020000');   -- Returns null, invalid date
 select JULIAN_TO_DATE_UDF('2020001');   -- Returns 2020-01-01

@@ -47,7 +47,9 @@ $$
  
 $$;
 ```
- 
+
+  ## Examples 
+
 ```sql
 SELECT SUBSTR_TD_UDF('ABCDE',-1,1); 	-- Returns empty string
 SELECT SUBSTR_TD_UDF('ABCDE',-1,2); 	-- Returns empty string

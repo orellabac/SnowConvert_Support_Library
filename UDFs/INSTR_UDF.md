@@ -38,7 +38,7 @@ function indexOfNth(search, target, position, n)
     var i = target.indexOf(search, position);
     return (n == 1 ? i : indexOfNth(search, target, i + 1, n - 1));
 }
-function INSTR_UDF(search, target, position, occurence) {
+function INSTR(search, target, position, occurence) {
     if (occurence < 1) return -1;
     if (position == 0) position = 1;
     if (position > 0) {
@@ -49,9 +49,11 @@ function INSTR_UDF(search, target, position, occurence) {
         return (index == -1) ? index : target.length - index;
     }
 }
-return INSTR_UDF(SEARCH, TARGET, POSITION, OCCURENCE);
+return INSTR(SEARCH, TARGET, POSITION, OCCURENCE);
 $$;
 ```
+
+ ## Examples 
  
 ```sql
 select INSTR_UDF('abcda','a');        -- Returns 1

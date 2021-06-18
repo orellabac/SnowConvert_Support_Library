@@ -229,7 +229,7 @@ $$
 ;
 
 -- =============================================
--- Description: Function for get the day name given a timestamp
+-- Description: Function for getting the complete day name in English given a timestamp.
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.DAY_OF_WEEK_LONG_UDF(VAL2 timestamp)
 RETURNS VARCHAR(16777216)
@@ -247,7 +247,7 @@ $$
 $$;
 
 -- =============================================
--- Description: Function for get the month name given a timestamp
+-- Description: Function for getting the complete month name in English given a timestamp.
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.MONTH_NAME_LONG_UDF(VAL2 timestamp)
 RETURNS VARCHAR(16777216)

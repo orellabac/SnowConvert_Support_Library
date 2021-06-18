@@ -15,7 +15,7 @@
 -- </copyright>
 
 -- =============================================
--- Description: UDF for Teradata INTERVAL2MONTHS function
+-- Description: UDF for convert an Interval to Months
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL2MONTHS_UDF
 (INPUT_VALUE VARCHAR())
@@ -32,7 +32,7 @@ END
 $$;
 
 -- =============================================
--- Description: UDF for Teradata INTERVAL2SECONDS function
+-- Description: UDF for convert an Interval to Seconds
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL2SECONDS_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE VARCHAR())
@@ -89,7 +89,7 @@ END
 $$;
 
 -- =============================================
--- Description: UDF for Teradata MONTHS2INTERVAL function
+-- Description: UDF for convert Months to an Interval
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.MONTHS2INTERVAL_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE NUMBER)
@@ -104,7 +104,7 @@ DECODE(INPUT_PART,
 $$;
 
 -- =============================================
--- Description: UDF for Teradata SECONDS2INTERVAL function
+-- Description: UDF for convert Seconds to an Interval
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.SECONDS2INTERVAL_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE NUMBER)
