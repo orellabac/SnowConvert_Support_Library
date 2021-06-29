@@ -378,10 +378,7 @@ if __name__ == "__main__":
     - Snowflake Database
 
     If the tool can find a config_snowsql.ini file in the current directory or in the workspace\config_snowsql.ini location
-    it will read those parameters from there.
-
-    
-    """)
+    it will read those parameters from there.""",formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-A","--Account",dest="Account", help = "Snowflake Account")
     parser.add_argument("-D","--Database",dest="Database", help = "Snowflake Database")
     parser.add_argument("-WH","--Warehouse",dest="Warehouse", help = "Snowflake Warehouse")

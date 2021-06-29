@@ -23,18 +23,50 @@ For general help content, pass in the ``-h`` parameter:
 
 .. code:: bash
 
-    SnowConvertStudio Deployment Script
-    ===================================
-    usage: sc-deploy-db [-h] User Password Workspace InPath LogPath [Split] [SplitPattern] [ObjectType]
-    positional arguments:
-    User          User
-    Password      Password
-    Workspace     Path for workspace root
-    InPath        Path for SQL scripts
-    LogPath       Path for process logs
-    Split         Allow splitting file contents when several statements are detected
-    SplitPattern  Regex Pattern to use to split scripts. Use capture groups to keep separator
-    ObjectType    Object Type to deploy table,view,procedure,function,macro
+    usage: sc-deploy-db [-h] [-A ACCOUNT] [-D DATABASE] [-WH WAREHOUSE] [-R ROLE]
+                        -U USER -P PASSWORD [-W WORKSPACE] -I INPATH [-L LOGPATH]
+                        [--SplitPattern SPLITPATTERN] [--ObjectType [OBJECTTYPE]]
+
+        SnowConvertStudio Deployment Script
+        ===================================
+
+        This script helps you to deploy a collection of .sql files to a Snowflake Account.
+
+        The tool will look for settings like:
+        - Snowflake Account
+        - Snowflake Warehouse
+        - Snowflake Role
+        - Snowflake Database
+
+        If the tool can find a config_snowsql.ini file in the current directory or in the workspace\config_snowsql.ini location
+        it will read those parameters from there.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -A ACCOUNT, --Account ACCOUNT
+                            Snowflake Account
+      -D DATABASE, --Database DATABASE
+                            Snowflake Database
+      -WH WAREHOUSE, --Warehouse WAREHOUSE
+                            Snowflake Warehouse
+      -R ROLE, --Role ROLE  Snowflake Role
+      -U USER, --User USER  Snowflake User
+      -P PASSWORD, --Password PASSWORD
+                            Password
+      -W WORKSPACE, --Workspace WORKSPACE
+                            Path for workspace root. Defaults to current dir
+      -I INPATH, --InPath INPATH
+                            Path for SQL scripts
+      -L LOGPATH, --LogPath LOGPATH
+                            Path for process logs. Defaults to current dir
+      --SplitPattern SPLITPATTERN
+                            When provided it should be Regex Pattern to use to
+                            split scripts. Use capture groups to keep separator.
+                            E.g: (CREATE OR REPLACE)
+      --ObjectType [OBJECTTYPE]
+                            Object Type to deploy
+                            table,view,procedure,function,macro
+
 
 optional arguments:
   -h, --help    show this help message and exit
