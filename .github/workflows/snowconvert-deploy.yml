@@ -1,0 +1,30 @@
+name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
+
+on: push
+
+jobs:
+    snowconvert-deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - name: Set up Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: '3.x'
+        - name: Install dependencies
+          run: |
+            cd tools/snowconvert-deploy
+            python -m pip install --upgrade pip
+            pip install build
+            pip install -r requirements.txt
+        - name: Build package
+          run: |
+            cd tools/snowconvert-deploy
+            python -m build
+        - name: Publish 📦 to PyPI
+          if: startsWith(github.ref, 'refs/tags')
+          uses: pypa/gh-action-pypi-publish@master
+          with:
+            user: __token__
+            password: ${{ secrets.PYPI_API_SECRET_OFFICIAL }}
+            packages_dir: tools/snowconvert-deploy/dist      
