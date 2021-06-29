@@ -15,12 +15,14 @@ Usage
 -----
 
 .. code:: bash
+
     $ sc-deploy-db -h
 
 
 For general help content, pass in the ``-h`` parameter:
 
-.. code::bash
+.. code:: bash
+
     SnowConvertStudio Deployment Script
     ===================================
     usage: sc-deploy-db [-h] User Password Workspace InPath LogPath [Split] [SplitPattern] [ObjectType]
