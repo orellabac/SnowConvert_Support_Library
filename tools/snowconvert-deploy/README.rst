@@ -8,7 +8,7 @@ Installation
 
 .. code:: bash
 
-    $ pip install snowconvert-deploy
+    $ pip install snowconvert-deploy --upgrade
 
 
 Usage

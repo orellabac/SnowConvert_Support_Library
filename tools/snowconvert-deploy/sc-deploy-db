@@ -409,18 +409,28 @@ if __name__ == "__main__":
     exclude_dirs= []
     ini_path = None
 
+    # declare and initialize variables
+    sf_account      = None
+    sf_warehouse    = None
+    sf_role         = None
+    sf_db           = None
+    sf_user         = None
+    sf_password     = None
+
     # First try to find a config_snowsql.ini file
     if args.Workspace and os.path.exists(os.path.join(args.Workspace,'config_snowsql.ini')):
         ini_path = os.path.join(args.Workspace,'config_snowsql.ini')
     if not ini_path and os.path.exists('config_snowsql.ini'):
         ini_path = 'config_snowsql.ini'
-
+    # if an ini file was found read some settings from there
+    # we avoid reading user and password from this file
     if ini_path and config.read(ini_path):
       sf_account    = args.Account or config['connections']['accountname']
       sf_warehouse  = args.Warehouse or config['connections']['warehousename']
       sf_role       = args.Role or config['connections']['rolename']
       sf_db         = args.Database or config['connections']['dbname']
 
+    # If some settings are still pending try the arguments or environment variables
     sf_account      = args.Account or sf_account or os.getenv("SNOW_ACCOUNT")
     sf_warehouse    = args.Warehouse or sf_warehouse or os.getenv("SNOW_WAREHOUSE")
     sf_role         = args.Role or sf_role or os.getenv("SNOW_ROLE")
