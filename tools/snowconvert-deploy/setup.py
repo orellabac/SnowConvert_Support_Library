@@ -12,7 +12,7 @@ import sys
 
 from setuptools import setup
 
-DEPLOY_VERSION = '0.0.1a3'
+DEPLOY_VERSION = '0.0.1a4'
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
