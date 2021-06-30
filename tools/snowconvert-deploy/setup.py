@@ -26,7 +26,7 @@ CLASSIFIERS = [
 ]
 
 DEPENDENCIES = [
-    'snowfalke-connector-python'
+    'snowflake-connector-python'
 ]
 
 setup(
