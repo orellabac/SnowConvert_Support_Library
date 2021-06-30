@@ -9,6 +9,8 @@ Installation
 .. code:: bash
 
     $ pip install snowconvert-deploy --upgrade
+    
+.. note:: If you run this command on MacOS change `pip` by `pip3`
 
 
 Usage
