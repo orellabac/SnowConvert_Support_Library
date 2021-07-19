@@ -203,7 +203,7 @@ def decode_error(argument):
 
 
 
-def main(input_script, workspace, split, splitpattern, object_type):
+def main(input_script, workspace, split, splitpattern, object_type, sf_authenticator):
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     global parallelism
@@ -214,7 +214,9 @@ def main(input_script, workspace, split, splitpattern, object_type):
           password  = sf_password,
           database  = sf_db,
           role      = sf_role,
-          warehouse = sf_warehouse)
+          warehouse = sf_warehouse,
+          application = "mobilize.net",
+          authenticator = sf_authenticator)
     stmnt_q = init(input_script, workspace, split, splitpattern, object_type)    
     created_q = queue.Queue()
     failed_q = queue.Queue()
@@ -384,9 +386,10 @@ if __name__ == "__main__":
     parser.add_argument("-WH","--Warehouse",dest="Warehouse", help = "Snowflake Warehouse")
     parser.add_argument("-R","--Role",dest="Role", help = "Snowflake Role")
     parser.add_argument("-U","--User",required=True,dest="User", help = "Snowflake User")
-    parser.add_argument("-P","--Password",required=True,dest="Password", help = "Password")
+    parser.add_argument("-P","--Password",dest="Password", help = "Password")
     parser.add_argument("-W","--Workspace",dest="Workspace", help = "Path for workspace root. Defaults to current dir", default=os.getcwd())
     parser.add_argument("-I","--InPath",required=True, dest="InPath", help = "Path for SQL scripts")
+    parser.add_argument("--authenticator",dest="authenticator", help = "Use the authenticator with you want to use a different authentication mechanism")
     parser.add_argument("-L","--LogPath",dest="LogPath", help = "Path for process logs. Defaults to current dir",default=os.path.join(os.getcwd(),"logs"))
     parser.add_argument("--SplitPattern", help = "When provided it should be Regex Pattern to use to split scripts. Use capture groups to keep separator. E.g: (CREATE OR REPLACE)", default=r"(CREATE OR REPLACE)")
     parser.add_argument("--ObjectType", help = "Object Type to deploy table,view,procedure,function,macro", nargs='?', default="")
@@ -444,4 +447,4 @@ if __name__ == "__main__":
     parallelism  = 20
     exclude_dirs = []
 
-    main(input_script, args.Workspace, args.SplitPattern,args.SplitPattern,args.ObjectType)
+    main(input_script, args.Workspace, args.SplitPattern,args.SplitPattern,args.ObjectType, args.authenticator)

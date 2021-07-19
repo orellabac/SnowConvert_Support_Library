@@ -8,7 +8,7 @@ Installation
 
 .. code:: bash
 
-    $ pip install snowconvert-deploy --upgrade
+    $ pip install snowconvert-deploy-tool --upgrade
     
 .. note:: If you run this command on MacOS change `pip` by `pip3`
 
@@ -43,6 +43,8 @@ For general help content, pass in the ``-h`` parameter:
         If the tool can find a config_snowsql.ini file in the current directory or in the workspace\config_snowsql.ini location
         it will read those parameters from there.
 
+::
+
     optional arguments:
       -h, --help            show this help message and exit
       -A ACCOUNT, --Account ACCOUNT
@@ -64,14 +66,12 @@ For general help content, pass in the ``-h`` parameter:
       --SplitPattern SPLITPATTERN
                             When provided it should be Regex Pattern to use to
                             split scripts. Use capture groups to keep separator.
-                            E.g: (CREATE OR REPLACE)
+                            For example: (CREATE OR REPLACE)
       --ObjectType [OBJECTTYPE]
                             Object Type to deploy
                             table,view,procedure,function,macro
-
-
-optional arguments:
-  -h, --help    show this help message and exit
+      optional arguments:
+      -h, --help    show this help message and exit
 
 This tool assumes :
 
@@ -100,6 +100,13 @@ You can deploy then by running:
 ::
 
     sc-deploy-db -A my_sf_account -WH my_wh -U user -P password -I code
+
+If you want to use another authentication like Azure AD you can do:
+
+::
+
+    sc-deploy-db -A my_sf_account -WH my_wh -U user -I code --authenticator externalbrowser
+
 
 
 Reporting issues and feedback

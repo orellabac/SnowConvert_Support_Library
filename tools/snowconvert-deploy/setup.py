@@ -12,7 +12,7 @@ import sys
 
 from setuptools import setup
 
-DEPLOY_VERSION = '0.0.1a4'
+DEPLOY_VERSION = '0.0.2'
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -26,7 +26,8 @@ CLASSIFIERS = [
 ]
 
 DEPENDENCIES = [
-    'snowflake-connector-python'
+    'snowflake-connector-python>=2.4.6',
+    'oscrypto>=1.2.1'
 ]
 
 setup(
@@ -37,7 +38,7 @@ setup(
     license='MIT',
     author='Mobilize.Net',
     author_email='mauricio.rojas@mobilize.net',
-    url='https://github.com/MobilizeNet/SnowConvert_Support_Library/tools/snowconvert-deploy',
+    url='https://github.com/MobilizeNet/SnowConvert_Support_Library/tree/main/tools/snowconvert-deploy',
     zip_safe=True,
     long_description=open('README.rst').read(),
     long_description_content_type = "text/x-rst",
