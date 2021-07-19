@@ -70,6 +70,8 @@ For general help content, pass in the ``-h`` parameter:
       --ObjectType [OBJECTTYPE]
                             Object Type to deploy
                             table,view,procedure,function,macro
+      --authenticator [method]
+                            When provided allow to use other authenticators for example 'externalbrowser'
       optional arguments:
       -h, --help    show this help message and exit
 
