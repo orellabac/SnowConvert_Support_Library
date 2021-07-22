@@ -207,16 +207,26 @@ def main(input_script, workspace, split, splitpattern, object_type, sf_authentic
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     global parallelism
-    print(f"Connecting account:{sf_account} database: {sf_db} role: {sf_role} warehouse: {sf_warehouse} user: {sf_user}")
-    con = snowflake.connector.connect (
-          account   = sf_account,
-          user      = sf_user,
-          password  = sf_password,
-          database  = sf_db,
-          role      = sf_role,
-          warehouse = sf_warehouse,
-          application = "mobilize.net",
-          authenticator = sf_authenticator)
+    print(f"Connecting account:{sf_account} database: {sf_db} role: {sf_role} warehouse: {sf_warehouse} user: {sf_user} auth: {sf_authenticator}")
+    if sf_authenticator:
+        con = snowflake.connector.connect (
+            account   = sf_account,
+            user      = sf_user,
+            password  = sf_password,
+            database  = sf_db,
+            role      = sf_role,
+            warehouse = sf_warehouse,
+            application = "mobilize.net",
+            authenticator = sf_authenticator)
+    else:
+        con = snowflake.connector.connect (
+            account   = sf_account,
+            user      = sf_user,
+            password  = sf_password,
+            database  = sf_db,
+            role      = sf_role,
+            warehouse = sf_warehouse,
+            application = "mobilize.net")
     stmnt_q = init(input_script, workspace, split, splitpattern, object_type)    
     created_q = queue.Queue()
     failed_q = queue.Queue()
