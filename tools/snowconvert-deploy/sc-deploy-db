@@ -399,6 +399,7 @@ if __name__ == "__main__":
     parser.add_argument("-P","--Password",dest="Password", help = "Password")
     parser.add_argument("-W","--Workspace",dest="Workspace", help = "Path for workspace root. Defaults to current dir", default=os.getcwd())
     parser.add_argument("-I","--InPath",required=True, dest="InPath", help = "Path for SQL scripts")
+    parser.add_argument("--activeConn",required=False, dest="ActiveConn", help = "When given, it will be used to select connection parameters forn config_snowsql.ini")
     parser.add_argument("--authenticator",dest="authenticator", help = "Use the authenticator with you want to use a different authentication mechanism")
     parser.add_argument("-L","--LogPath",dest="LogPath", help = "Path for process logs. Defaults to current dir",default=os.path.join(os.getcwd(),"logs"))
     parser.add_argument("--SplitPattern", help = "When provided it should be Regex Pattern to use to split scripts. Use capture groups to keep separator. E.g: (CREATE OR REPLACE)", default=r"(CREATE OR REPLACE)")
@@ -423,12 +424,14 @@ if __name__ == "__main__":
     ini_path = None
 
     # declare and initialize variables
-    sf_account      = None
-    sf_warehouse    = None
-    sf_role         = None
-    sf_db           = None
-    sf_user         = None
-    sf_password     = None
+    sf_account       = None
+    sf_warehouse     = None
+    sf_role          = None
+    sf_db            = None
+    sf_user          = None
+    sf_password      = None
+    sf_authenticator = None
+    sf_application   = None
 
     # First try to find a config_snowsql.ini file
     if args.Workspace and os.path.exists(os.path.join(args.Workspace,'config_snowsql.ini')):
@@ -438,10 +441,15 @@ if __name__ == "__main__":
     # if an ini file was found read some settings from there
     # we avoid reading user and password from this file
     if ini_path and config.read(ini_path):
-      sf_account    = args.Account or config['connections']['accountname']
-      sf_warehouse  = args.Warehouse or config['connections']['warehousename']
-      sf_role       = args.Role or config['connections']['rolename']
-      sf_db         = args.Database or config['connections']['dbname']
+      connectionSettingsSection = "connections"
+      if args.ActiveConn:
+          if args.ActiveConn != "default":
+              connectionSettingsSection = "connections." + args.ActiveConn
+      sf_account       = args.Account or config[connectionSettingsSection]['accountname']
+      sf_warehouse     = args.Warehouse or config[connectionSettingsSection]['warehousename']
+      sf_role          = args.Role or config[connectionSettingsSection]['rolename']
+      sf_db            = args.Database or config[connectionSettingsSection]['dbname']
+      sf_authenticator = args.authenticator or config[connectionSettingsSection]['authenticator']
 
     # If some settings are still pending try the arguments or environment variables
     sf_account      = args.Account or sf_account or os.getenv("SNOW_ACCOUNT")
