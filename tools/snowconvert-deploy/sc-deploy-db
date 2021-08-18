@@ -445,11 +445,11 @@ if __name__ == "__main__":
       if args.ActiveConn:
           if args.ActiveConn != "default":
               connectionSettingsSection = "connections." + args.ActiveConn
-      sf_account       = args.Account or config[connectionSettingsSection]['accountname']
-      sf_warehouse     = args.Warehouse or config[connectionSettingsSection]['warehousename']
-      sf_role          = args.Role or config[connectionSettingsSection]['rolename']
-      sf_db            = args.Database or config[connectionSettingsSection]['dbname']
-      sf_authenticator = args.authenticator or config[connectionSettingsSection]['authenticator']
+      sf_account       = args.Account       or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
+      sf_warehouse     = args.Warehouse     or (config[connectionSettingsSection]['warehousename'] if 'warehousename' in config[connectionSettingsSection] else None)
+      sf_role          = args.Role          or (config[connectionSettingsSection]['rolename']      if 'rolename'      in config[connectionSettingsSection] else None)
+      sf_db            = args.Database      or (config[connectionSettingsSection]['dbname']        if 'dbname'        in config[connectionSettingsSection] else None)
+      sf_authenticator = args.authenticator or (config[connectionSettingsSection]['authenticator'] if 'authenticator' in config[connectionSettingsSection] else None)
 
     # If some settings are still pending try the arguments or environment variables
     sf_account      = args.Account or sf_account or os.getenv("SNOW_ACCOUNT")
