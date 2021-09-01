@@ -13,56 +13,84 @@ if not os.path.exists(arguments.input):
     exit(100)
     
 file_contents = open(arguments.input,"r").read()
+max = len(file_contents)
+i = 0
+result = ""
+
+def eat_number(str):
+    global i
+    after_first_number = False
+    decimal_points_count = 0
+    while str[i].isnumeric() or (after_first_number and decimal_points_count == 0 and str[i]=='.'):
+        if str[i].isnumeric():
+            after_first_number = True
+        if str[i]=='.':
+            decimal_points_count = decimal_points_count + 1
+        i = i + 1
+    pass
+
+def eat_string(str):
+    global i
+    i = i + 1
+    while str[i] != "'" and i < max:
+        if str[i] == "'" and str[i+1] == "'": # this is an escaped string just skip
+            i = i + 2
+        else:
+            i = i + 1
+    i = i + 1
+    pass
+
+def eat_until_closing_parenthesis(str):
+    global i
+    while str[i] != ')' and i < max:
+        if str[i] == "'":
+            eat_string(str)
+        if str[i].isnumeric():
+            eat_number(str)
+        if str[i].isspace():
+            eat_whitespace(str)
+        if str[i] == ',':
+            i = i + 1
+    if str[i] == ')':
+        i = i + 1
+
+def eat_whitespace(str):
+    global i
+    while str[i].isspace() and i < max:
+        i = i + 1
+
+def eat_compress(str):
+    global i
+    eat_whitespace(str)
+    if str[i]=='(':
+        i = i + 1
+        eat_until_closing_parenthesis(str)
+    else:
+        if str[i]=="'":
+            eat_string(str)
 
 
-def replace_compress(match):
-    print ("Match found at {start}-{end}: {match}".format(start = match.start( ), end = match.end(), match = match.group()))
-    return ""
-
-new_file_contents = file_contents
-
-# compress pattern compress 00.00
-regex = r"(\bCOMPRESS\s+\d+(.)?(\d+)?)"
-new_file_contents = re.sub(regex, replace_compress, new_file_contents, flags=re.DOTALL | re.MULTILINE )
-
-# compress pattern compress 'xxx'
-regex = r"(\bCOMPRESS\s+'[^']+')"
-new_file_contents = re.sub(regex, replace_compress, new_file_contents, flags=re.DOTALL | re.MULTILINE )
-
-
-# compress pattern compress ( value1, ... ) using
-#regex = r"\bCOMPRESS\b\s*\(.*?\)(\s+COMPRESS\s+USING\s+\w+)?(\s+DECOMPRESS\s+USING\s+\w+)?"
-#new_file_contents = re.sub(regex, replace_compress, new_file_contents, flags=re.DOTALL | re.MULTILINE )
-
-# compress ( values... )
-def replace_compress2(match):
-    print ("Match found at {start}-{end}: {match}".format(start = match.start( ), end = match.end(), match = match.group()))
-    return ","
-regex = r"(\bCOMPRESS\s+\(.*?\s*,$)"
-new_file_contents = re.sub(regex, replace_compress2, new_file_contents, flags=re.DOTALL | re.MULTILINE )
+def process_file(file_contents):
+    global i
+    global result
+    while i < max:
+        if    (i + 8 < max) and file_contents[i  ]=='C' and file_contents[i+1]=='O' and file_contents[i+2]=='M' \
+        and file_contents[i+3]=='P' and file_contents[i+4]=='R' \
+        and file_contents[i+5]=='E' and file_contents[i+6]=='S' and file_contents[i+7]=='S' \
+        and not file_contents[i+8].isalpha():
+                i = i + 8
+                # we only eat the character after compress if it was an space
+                # that is in case the user wrote COMPRESS'12' or COMPRESS('12')
+                if file_contents[i].isspace():
+                    i = i + 1
+                eat_compress(file_contents)
+        else:
+            result = result + file_contents[i]
+            i = i + 1
 
 
-def replace_compress(match):
-    print ("MatchX found at {start}-{end}: {match}".format(start = match.start( ), end = match.end(), match = match.group()))
-    return match.group(2)
-
-regex = r"((CHARACTER\sSET\s.*?)COMPRESS)"
-new_file_contents = re.sub(regex, replace_compress, new_file_contents, flags=re.DOTALL | re.MULTILINE )
-
-regex = r"((TIMESTAMP(.*?))\s+COMPRESS)"
-def replace_compress_timestamp(match):
-    print ("Match found at {start}-{end}: {match}".format(start = match.start( ), end = match.end(), match = match.group()))
-    return match.group(2)
-new_file_contents = re.sub(regex, replace_compress_timestamp, new_file_contents, flags=re.DOTALL | re.MULTILINE )
-
-regex = r"((DECIMAL(.*?))\s+COMPRESS)"
-def replace_compress_decimal(match):
-    print ("Match found at {start}-{end}: {match}".format(start = match.start( ), end = match.end(), match = match.group()))
-    return match.group(2)
-new_file_contents = re.sub(regex, replace_compress_decimal, new_file_contents, flags=re.DOTALL | re.MULTILINE )
-
-
+process_file(file_contents)
 with open(arguments.output,"w") as f:
-    f.write(new_file_contents)
+    f.write(result)
     
 print("Done!")
