@@ -99,8 +99,12 @@ def eat_compress(str):
         i = i + 1
         eat_until_closing_parenthesis(str)
     else:
+        # remove fragments like: COMPRESS 'literal'
         if str[i]=="'":
             eat_string(str)
+        # remove fragments like: COMPRESS 100
+        if str[i].isnumeric():
+            eat_number(str)
 
 
 def process_file(file_contents):
