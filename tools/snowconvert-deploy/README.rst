@@ -27,55 +27,47 @@ For information about the different parameters or options just run it using the 
 
 .. code:: bash
 
-    usage: sc-deploy-db [-h] [-A ACCOUNT] [-D DATABASE] [-WH WAREHOUSE] [-R ROLE]
-                        -U USER -P PASSWORD [-W WORKSPACE] -I INPATH [-L LOGPATH]
-                        [--SplitPattern SPLITPATTERN] [--ObjectType [OBJECTTYPE]]
-
-        SnowConvertStudio Deployment Script
-        ===================================
-
-        This script helps you to deploy a collection of .sql files to a Snowflake Account.
-
-        The tool will look for settings like:
-        - Snowflake Account
-        - Snowflake Warehouse
-        - Snowflake Role
-        - Snowflake Database
-
-        If the tool can find a config_snowsql.ini file in the current directory or in the workspace\config_snowsql.ini location
-        it will read those parameters from there.
-
-::
-
+    usage: sc-deploy-db [-h] [-A ACCOUNT] [-D DATABASE] [-WH WAREHOUSE] [-R ROLE] [-U USER] [-P PASSWORD] [-W WORKSPACE] -I INPATH
+                    [--activeConn ACTIVECONN] [--authenticator AUTHENTICATOR] [-L LOGPATH] [--SplitBefore SPLITBEFORE] [--SplitAfter SPLITAFTER]
+                    [--ObjectType [OBJECTTYPE]]
+    SnowConvertStudio Deployment Script
+    ===================================
+    This script helps you to deploy a collection of .sql files to a Snowflake Account.
+    The tool will look for settings like:
+    - Snowflake Account
+    - Snowflake Warehouse
+    - Snowflake Role
+    - Snowflake Database
+    If the tool can find a config_snowsql.ini file in the current directory or in the workspace\config_snowsql.ini location
+    it will read those parameters from there.
     optional arguments:
-      -h, --help            show this help message and exit
-      -A ACCOUNT, --Account ACCOUNT
-                            Snowflake Account
-      -D DATABASE, --Database DATABASE
-                            Snowflake Database
-      -WH WAREHOUSE, --Warehouse WAREHOUSE
-                            Snowflake Warehouse
-      -R ROLE, --Role ROLE  Snowflake Role
-      -U USER, --User USER  Snowflake User
-      -P PASSWORD, --Password PASSWORD
-                            Password
-      -W WORKSPACE, --Workspace WORKSPACE
-                            Path for workspace root. Defaults to current dir
-      -I INPATH, --InPath INPATH
-                            Path for SQL scripts
-      -L LOGPATH, --LogPath LOGPATH
-                            Path for process logs. Defaults to current dir
-      --SplitPattern SPLITPATTERN
-                            When provided it should be Regex Pattern to use to
-                            split scripts. Use capture groups to keep separator.
-                            For example: (CREATE OR REPLACE)
-      --ObjectType [OBJECTTYPE]
-                            Object Type to deploy
-                            table,view,procedure,function,macro
-      --authenticator [method]
-                            When provided allow to use other authenticators for example 'externalbrowser'
-      optional arguments:
-      -h, --help    show this help message and exit
+    -h, --help            show this help message and exit
+    -A ACCOUNT, --Account ACCOUNT
+                          Snowflake Account
+    -D DATABASE, --Database DATABASE
+                          Snowflake Database
+    -WH WAREHOUSE, --Warehouse WAREHOUSE
+                          Snowflake Warehouse
+    -R ROLE, --Role ROLE  Snowflake Role
+    -U USER, --User USER  Snowflake User
+    -P PASSWORD, --Password PASSWORD
+                          Password
+    -W WORKSPACE, --Workspace WORKSPACE
+                          Path for workspace root. Defaults to current dir
+    -I INPATH, --InPath INPATH
+                          Path for SQL scripts
+    --activeConn ACTIVECONN
+                          When given, it will be used to select connection parameters forn config_snowsql.ini
+    --authenticator AUTHENTICATOR
+                          Use the authenticator with you want to use a different authentication mechanism
+    -L LOGPATH, --LogPath LOGPATH
+                          Path for process logs. Defaults to current dir
+    --SplitBefore SPLITBEFORE
+                          Regular expression that can be used to split code in fragments starting **BEFORE** the matching expression
+    --SplitAfter SPLITAFTER
+                          Regular expression that can be used to split code in fragments starting **AFTER** the matching expression
+    --ObjectType [OBJECTTYPE]
+                          Object Type to deploy table,view,procedure,function,macro
 
 This tool assumes :
 
@@ -157,8 +149,8 @@ Files with multiple statements
 ------------------------------
 
 If your files have multiple statements, it will cause some failures are the snowflake Python API does not allow multiple statements on a single call.
-In order to handle that, you give a tool an **SpliPattern** this pattern is a regular expression that can be used to split the file contents before
-sending them to the database.
+In order to handle that, you give a tool a this pattern is a regular expression that can be used to split the file contents before
+sending them to the database. This pattern could be used to split before the pattern: `--SplitBefore` or to split after the pattern `--SplitAfter`.
 
 Let's see some example. 
 
@@ -175,7 +167,7 @@ If you have a file with contents like:
         COL1 VARCHAR
     );
 
-You can use an argument like `--SplitPattern ';'` that will create a fragment from the file anytime a `;` is found.
+You can use an argument like `--SplitAfter ';'` that will create a fragment from the file anytime a `;` is found.
 
 If you have a file with statements like:
 
@@ -190,7 +182,7 @@ If you have a file with statements like:
         COL1 VARCHAR
     );
 
-You can use an argument like `--SplitPattern 'CREATE (OR REPLACE)?'`. That will create a fragment each time a `CREATE` or `CREATE OR REPLACE` fragment is found;
+You can use an argument like `--SplitBefore 'CREATE (OR REPLACE)?'`. That will create a fragment each time a `CREATE` or `CREATE OR REPLACE` fragment is found;
 
 Reporting issues and feedback
 -----------------------------

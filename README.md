@@ -24,3 +24,7 @@ Version 0.0.6
 * Improvements for the SplitPattern option, to handle files that have more that one statement
 * Adding exception handling while opening the connection
 * Fixing defaults and making more options optional so they can always be read from the SNOW_xxx variables
+
+Version 0.0.7
+
+* Change SplitPattern for SplitBefore or After to better handle some scenarios

@@ -113,10 +113,27 @@ def init(input_directory, workspace, split, splitpattern, object_type):
     delimiter = "@@SPLIT@@"
     def split_match(match):
         whole_match = match.group()
+        if split == 2:
+           return whole_match + delimiter
+        # or by default split before
         return delimiter + whole_match
+    def empty_block(block):
+        if block is None:
+            return True
+        stripped = block.strip()
+        if stripped == '':
+            return True
+        lines = stripped.split('\n')
+        lines = [x for x in lines if not x.strip()=='' and not x.startswith("--")]
+        return len(lines) > 0
+        
     #creates queue object with all statements
     stmnt_q = queue.Queue()
     qualified_exclude_dirs = [os.path.join(input_directory,x) for x in exclude_dirs]
+    if split == 1:
+        print(f'Using SPLIT PATTERN BEFORE [{splitpattern}]')
+    if split == 2:
+        print(f'Using SPLIT PATTERN AFTER [{splitpattern}]')
     for dirpath, _ , files in os.walk(input_directory):
         print(f'Processing directory: {dirpath}')
         if dirpath in qualified_exclude_dirs:
@@ -141,14 +158,14 @@ def init(input_directory, workspace, split, splitpattern, object_type):
                         contents = f.read()
                         if split:
                             print(f"Processing file {full_path} ",end="")
+                            # we need to remove empty comments because they can cause problems when splitting
                             contents_with_split_marks = re.sub(splitpattern, split_match,contents)
                             has_parts = len(contents_with_split_marks) > len(contents)
                             if has_parts:
-                                print(f"has sql fragments, using split pattern ",end="")
                                 # First we split and remove empty
-                                result_parts = [ x for x in contents_with_split_marks.split(delimiter) if x is not None and x.strip()!='']
+                                result_parts = [ x for x in contents_with_split_marks.split(delimiter) if not empty_block(x)]
                                 # Finally add this to the staments that will be deployed
-                                print(f" {len(result_parts)} fragments found")
+                                print(f" {len(result_parts)} fragment(s) found")
                                 for sql_part in result_parts:
                                     stmnt_q.put((full_path,sql_part))
                             else:
@@ -410,7 +427,8 @@ if __name__ == "__main__":
     parser.add_argument("--activeConn",required=False, dest="ActiveConn", help = "When given, it will be used to select connection parameters forn config_snowsql.ini")
     parser.add_argument("--authenticator",dest="authenticator", help = "Use the authenticator with you want to use a different authentication mechanism")
     parser.add_argument("-L","--LogPath",dest="LogPath", help = "Path for process logs. Defaults to current dir",default=os.path.join(os.getcwd(),"logs"))
-    parser.add_argument("--SplitPattern", help = "When provided it should be Regex Pattern to use to split scripts. Use capture groups to keep separator. E.g: (CREATE OR REPLACE)")
+    parser.add_argument("--SplitBefore", help = "Regular expression that can be used to split code in fragments starting **BEFORE** the matching expression")
+    parser.add_argument("--SplitAfter",  help = "Regular expression that can be used to split code in fragments starting **AFTER** the matching expression")
     parser.add_argument("--ObjectType", help = "Object Type to deploy table,view,procedure,function,macro", nargs='?', default="")
 
 
@@ -471,5 +489,10 @@ if __name__ == "__main__":
     msg_freq     = int(os.getenv('CI_MSG_FREQ') or 0)
     parallelism  = 20
     exclude_dirs = []
-
-    main(input_script, args.Workspace, args.SplitPattern,args.SplitPattern,args.ObjectType, args.authenticator)
+    split = None
+    if args.SplitBefore:
+        split = 1
+    else:
+        if args.SplitAfter:
+            split = 2
+    main(input_script, args.Workspace, split,args.SplitBefore or args.SplitAfter,args.ObjectType, args.authenticator)
