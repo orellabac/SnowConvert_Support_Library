@@ -1,7 +1,10 @@
 sc-deploy-db
 ===============
 
-sc-deploy-db is a multi-platform command line tool for deploying scripts to Snowflake
+sc-deploy-db is a multi-platform command line tool for deploying scripts to Snowflake. 
+For large data warehouses, it makes it easy when you have folders with a lot of source files
+and you need a quick solution to deploy them to your Snowflake Warehouse.
+
 
 Installation
 ------------
@@ -16,12 +19,11 @@ Installation
 Usage
 -----
 
+For information about the different parameters or options just run it using the  `-h` option:
+
 .. code:: bash
 
     $ sc-deploy-db -h
-
-
-For general help content, pass in the ``-h`` parameter:
 
 .. code:: bash
 
@@ -78,9 +80,22 @@ For general help content, pass in the ``-h`` parameter:
 This tool assumes :
 
 - that you have a collection of `.sql` files under a directory. It will then execute all those `.sql` files connecting to the specified database.
-- that each file contains **only** one statement. 
+- that each file contains **only** one statement.
 
-.. note::  If your files contains several statements you can use the Split and SplitPattern arguments, so the tool will try to split the statements prior to execution.
+The tool can also read its values from environment variables. The following environment variables are recognized by this tool:
+
++------------------+--------------------------------------------------------------------+
+| Variable Name    | Description                                                        |
++==================+====================================================================+
+| SNOW_USER        | The username that will be used for the connection                  |
+| SNOW_PASSWORD    | The password that will be used for the connection                  |
+| SNOW_ROLE        | The snowflake role that will used for the connection               |    
+| SNOW_ACCOUNT     | The snowflake accountname that will used for the connection        |    
+| SNOW_WAREHOUSE   | The warehouse to use when running the sql                          |
+| SNOW_DATABASE    | The database to use when running the sql.                          |    
++------------------+--------------------------------------------------------------------+
+
+.. note::  If your files contains several statements you can use the SplitPattern argument, as explained below, so the tool will try to split the statements prior to execution.
 
 Examples
 --------
@@ -99,7 +114,7 @@ If you have a folder structure like:
 
 You can deploy then by running:
 
-::
+:: 
 
     sc-deploy-db -A my_sf_account -WH my_wh -U user -P password -I code
 
@@ -110,6 +125,63 @@ If you want to use another authentication like Azure AD you can do:
     sc-deploy-db -A my_sf_account -WH my_wh -U user -I code --authenticator externalbrowser
 
 
+A recommended approach is that you setup a bash shell script, for example `config.sh` with contents like:
+
+::
+
+    export SNOW_ACCOUNT="migration.us-east-1"
+    export SNOW_WAREHOUSE="TIAA_WH"
+    export SNOW_ROLE="TIAA_FULL_ROLE"
+    export SNOW_DATABASE="TIAA"
+    echo "Reading User and Password. When you type values wont be displayed"
+    read -s -p "User: "     SNOW_USER
+    echo ""
+    read -s -p "Password: " SNOW_PASSWORD
+    echo ""
+    export SNOW_USER
+    export SNOW_PASSWORD
+
+You can then run the script like: `source config.sh`. After that you can just run `sc-deploy-db -I folder-to-deploy`
+
+
+Files with multiple statements
+------------------------------
+
+If your files have multiple statements, it will cause some failures are the snowflake Python API does not allow multiple statements on a single call.
+In order to handle that, you give a tool an **SpliPattern** this pattern is a regular expression that can be used to split the file contents before
+sending them to the database.
+
+Let's see some example. 
+
+If you have a file with contents like:
+
+::
+
+    CREATE OR REPLACE SEQUENCE SEQ1
+    START WITH 1
+    INCREMENT BY 1;
+
+    /* <sc-table> TABLE1 </sc-table> */
+    CREATE TABLE TABLE1 (
+        COL1 VARCHAR
+    );
+
+You can use an argument like `--SplitPattern ';'` that will create a fragment from the file anytime a `;` is found.
+
+If you have a file with statements like:
+
+::
+    
+    CREATE TABLE OR REPLACE TABLE1 (
+        COL1 VARCHAR
+    );
+
+    /* <sc-table> TABLE2 </sc-table> */
+    CREATE TABLE TABLE2 (
+        COL1 VARCHAR
+    );
+
+You can use an argument like `--SplitPattern 'CREATE (OR REPLACE)?'`. That will create a fragment each time a `CREATE` or `CREATE OR REPLACE` fragment is found;
 
 Reporting issues and feedback
 -----------------------------
