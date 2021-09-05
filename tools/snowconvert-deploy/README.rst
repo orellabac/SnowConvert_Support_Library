@@ -84,16 +84,25 @@ This tool assumes :
 
 The tool can also read its values from environment variables. The following environment variables are recognized by this tool:
 
-+------------------+--------------------------------------------------------------------+
-| Variable Name    | Description                                                        |
-+==================+====================================================================+
-| SNOW_USER        | The username that will be used for the connection                  |
-| SNOW_PASSWORD    | The password that will be used for the connection                  |
-| SNOW_ROLE        | The snowflake role that will used for the connection               |    
-| SNOW_ACCOUNT     | The snowflake accountname that will used for the connection        |    
-| SNOW_WAREHOUSE   | The warehouse to use when running the sql                          |
-| SNOW_DATABASE    | The database to use when running the sql.                          |    
-+------------------+--------------------------------------------------------------------+
+.. list-table:: Environmental Variables
+   :widths: 25 50
+   :header-rows: 1
+
+   * - Variable Name
+     - Description
+   * - SNOW_USER
+     - The username that will be used for the connection
+   * - SNOW_PASSWORD
+     - The password that will be used for the connection
+   * - SNOW_ROLE
+     - The snowflake role that will used for the connection
+   * - SNOW_ACCOUNT
+     - The snowflake accountname that will used for the connection
+   * - SNOW_WAREHOUSE
+     - The warehouse to use when running the sql
+   * - SNOW_DATABASE
+     - The database to use when running the sql
+
 
 .. note::  If your files contains several statements you can use the SplitPattern argument, as explained below, so the tool will try to split the statements prior to execution.
 
