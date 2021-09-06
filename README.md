@@ -7,7 +7,7 @@
 
 ## [SnowConvert Deploy Tool](https://pypi.org/project/snowconvert-deploy-tool/)
 
-### `sc-deploy-to-db' updates
+### `sc-deploy-to-db` updates
 
 Version 0.0.4
 
@@ -28,3 +28,7 @@ Version 0.0.6
 Version 0.0.7
 
 * Change SplitPattern for SplitBefore or After to better handle some scenarios
+
+Version 0.0.8
+
+* Fix typo in documentation, and minor issue with log files

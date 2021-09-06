@@ -125,7 +125,7 @@ def init(input_directory, workspace, split, splitpattern, object_type):
             return True
         lines = stripped.split('\n')
         lines = [x for x in lines if not x.strip()=='' and not x.startswith("--")]
-        return len(lines) > 0
+        return len(lines) == 0
         
     #creates queue object with all statements
     stmnt_q = queue.Queue()
@@ -339,7 +339,7 @@ def main(input_script, workspace, split, splitpattern, object_type, sf_authentic
                 
             else:
                 error_name = str(decode_error(em["error_msg"].errno))
-                error_file = open(out_path + "error_" + str(execution_summary["session_id"]) + "_" + error_name + ".sql", "w+")
+                error_file = open(os.path.join(out_path,"error_" + str(execution_summary["session_id"]) + "_" + error_name + ".sql"), "w+")
                 errno_dict[em["error_msg"].errno] = error_file
             
             i = em["statement"].find("</sc")
