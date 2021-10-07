@@ -15,7 +15,20 @@
 -- </copyright>
 
 -- =============================================
--- Description: Emulates the behavior of the END function
+-- This file holds UDFs with that have the objective of emulating the functions related with the Teradata period type and its functions
+-- Snowflake does not support the period type or its related functions, for more information on how SnowConvert handles periods and how these UDFs work please refer to
+-- https://app.gitbook.com/@mobilizenet/s/snowconvert/for-teradata/issues/mscewi2053
+-- =============================================
+
+-- =============================================
+-- Description: Emulates the behavior of the END function from Teradata
+-- The input parameter should be a VARCHAR representing a period in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
+-- Returns a timestamp representing the ending bound of the period
+-- Example:
+-- Input:
+--      SELECT PUBLIC.PERIOD_END_UDF('2015-02-13 12:15:30*2020-02-13 08:45:15')
+-- Returns:
+--      A timestamp with value 2020-02-13 08:45:15.000
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_END_UDF(PERIOD_VAL VARCHAR(22))
 RETURNS TIMESTAMP
@@ -25,7 +38,14 @@ $$
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the BEGIN function
+-- Description: Emulates the behavior of the BEGIN function from Teradata
+-- The input parameter should be a VARCHAR representing a period in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
+-- Returns a timestamp representing the ending bound of the period
+-- Example:
+-- Input:
+--      SELECT PUBLIC.PERIOD_BEGIN_UDF('2020-10-05*2021-09-27')
+-- Returns:
+--      A timestamp with value 2020-10-05 00:00:00.000
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_BEGIN_UDF(PERIOD_VAL VARCHAR(22))
 RETURNS TIMESTAMP
@@ -35,7 +55,14 @@ $$
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the LDIFF function
+-- Description: Emulates the behavior of the LDIFF function from Teradata
+-- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
+-- The result is either a period of the form 'beginningBound*EndingBound' that represensts the value of the RDIFF or null, check the Teradata documentation of LDIFF for more information on the results
+-- Example:
+-- Input:
+--      SELECT PUBLIC.PERIOD_LDIFF_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
+-- Returns:
+--       '2020-08-28*2020-12-15'
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_LDIFF_UDF(PERIOD_1 VARCHAR(50), PERIOD_2 VARCHAR(50))
 RETURNS VARCHAR
@@ -51,7 +78,14 @@ $$
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the RDIFF function
+-- Description: Emulates the behavior of the RDIFF function from Teradata
+-- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
+-- The result is either a period of the form 'beginningBound*EndingBound' that represensts the value of the RDIFF or null, check the Teradata documentation of RDIFF for more information on the results
+-- Example:
+-- Input:
+--      SELECT PUBLIC.PERIOD_RDIFF_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
+-- Returns:
+--      '2023-05-18*2025-10-15'
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_RDIFF_UDF(PERIOD_1 VARCHAR(50), PERIOD_2 VARCHAR(50))
 RETURNS VARCHAR
@@ -67,7 +101,14 @@ CASE WHEN PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_2, PERIOD_1) = 'TRUE'
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the OVERLAPS function
+-- Description: Emulates the behavior of the OVERLAPS function from Teradata
+-- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
+-- The result is a boolean that indicates if the two periods overlap, check the Teradata documentation of OVERLAPS for more information on the results
+-- Example:
+-- Input:
+--      SELECT PUBLIC.PERIOD_OVERLAPS_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
+-- Returns:
+--      TRUE
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_1 VARCHAR(22), PERIOD_2 VARCHAR(22))
 RETURNS BOOLEAN 
