@@ -32,3 +32,8 @@ Version 0.0.7
 Version 0.0.8
 
 * Fix typo in documentation, and minor issue with log files
+
+Version 0.0.9
+
+* Adding support for external-browser authentication
+* Adding support for specifying an schema
