@@ -19,3 +19,7 @@
 
 - Adding support for external-browser authenticator
 - Adding shema option
+
+## Version 0.0.10
+
+- No changes, solving an issue with PyPi publication

@@ -37,3 +37,7 @@ Version 0.0.9
 
 * Adding support for external-browser authentication
 * Adding support for specifying an schema
+
+Version 0.0.10
+
+* No changes issues just solving issues with PyPI
