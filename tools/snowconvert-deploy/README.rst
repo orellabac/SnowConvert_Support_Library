@@ -46,6 +46,8 @@ For information about the different parameters or options just run it using the 
                           Snowflake Account
     -D DATABASE, --Database DATABASE
                           Snowflake Database
+    -S SCHEMA, --Schema SCHEMA
+                          Snowflake Initial Schema                          
     -WH WAREHOUSE, --Warehouse WAREHOUSE
                           Snowflake Warehouse
     -R ROLE, --Role ROLE  Snowflake Role
