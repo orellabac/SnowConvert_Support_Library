@@ -23,3 +23,7 @@
 ## Version 0.0.10
 
 - No changes, solving an issue with PyPi publication
+
+## Version 0.0.11
+
+- Schema parameter was not properly passed in connection call
