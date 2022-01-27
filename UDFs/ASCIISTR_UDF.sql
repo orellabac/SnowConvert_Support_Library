@@ -35,7 +35,7 @@
 -- select ASCIISTR_UDF('A B C Ä Ê Í Õ Ø') from dual; -- Result: 'A B C \00C4 \00CA \00CD \00D5 \00D8'
 -- SELECT ASCIISTR_UDF('ABÄCDE') FROM DUAL; -- Returns AB\00C4CDE  
 -- =============================================
---  Credit for this UDF goes to Marco Carillo
+--  Credit for this UDF goes to Marco Carrillo
 CREATE OR REPLACE FUNCTION PUBLIC.ASCIISTR_UDF (VAL STRING)
 RETURNS STRING
 LANGUAGE JAVASCRIPT
