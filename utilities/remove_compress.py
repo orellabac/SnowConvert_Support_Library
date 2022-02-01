@@ -49,9 +49,6 @@ def eat_number(str):
 def eat_string(str):
     global i
     i = i + 1
-    # Debugging 
-    #if str[i]=="'" and str[i+1]=="'":
-    #    print("a")
     while str[i] != "'" and i < max:
         if str[i] == "'" and str[i+1] == "'": # this is an escaped string just skip
             i = i + 2
