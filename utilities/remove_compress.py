@@ -49,8 +49,6 @@ def eat_number(str):
 def eat_string(str):
     global i
     i = i + 1
-    if str[i]=="'" and str[i+1]=="'":
-        print("a")
     while str[i] != "'" and i < max:
         if str[i] == "'" and str[i+1] == "'": # this is an escaped string just skip
             i = i + 2
@@ -113,7 +111,7 @@ def process_file(file_contents):
     with open(arguments.output,"w",buffering=10000) as f:
         while i < max:
             if i % 100 == 0:
-                print(f"offset at {i}\r",end="")
+                print(f"Processing offset at {i}\r",end="")
             if    (i + 8 < max) and file_contents[i  ]=='C' and file_contents[i+1]=='O' and file_contents[i+2]=='M' \
             and file_contents[i+3]=='P' and file_contents[i+4]=='R' \
             and file_contents[i+5]=='E' and file_contents[i+6]=='S' and file_contents[i+7]=='S' \
