@@ -1,4 +1,4 @@
-﻿-- <copyright file="HEX_UDF.cs" company="Mobilize.Net">
+﻿-- <copyright file="ISNUMERIC_UDF.cs" company="Mobilize.Net">
 --        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
 -- 
 --        This file is part of the Mobilize Frameworks, which is
@@ -14,13 +14,15 @@
 --        from Mobilize.Net Corporation.
 -- </copyright>
 
--- =============================================
--- Description: UDF for Teradata CHAR2HEXINT function
--- =============================================
-CREATE OR REPLACE FUNCTION PUBLIC.CHAR2HEXINT_UDF (IN_STR VARCHAR)
-  RETURNS VARCHAR
-  LANGUAGE JAVASCRIPT
-AS $$
-  return IN_STR.split('').map( e => "00" + e.charCodeAt(0).toString(16) ).join('');
+-- =========================================================================================================
+-- Description: The ISNUMERIC() function Determines whether an expression is a valid numeric type. 
+-- ISNUMERIC returns 1 when the input expression evaluates to a valid numeric data type; otherwise it returns 0.
+-- =========================================================================================================
+
+create or replace function ISNUMERIC_UDF(v VARCHAR)
+returns INTEGER
+language sql
+as 
 $$
-;
+    SELECT CASE WHEN TRY_TO_NUMERIC(V) IS NULL THEN 0 ELSE 1 END
+$$;
