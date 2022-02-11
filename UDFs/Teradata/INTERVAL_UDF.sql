@@ -1,4 +1,4 @@
--- <copyright file="INTERVAL_UDF.cs" company="Mobilize.Net">
+-- <copyright file="INTERVAL_UDF.sql" company="Mobilize.Net">
 --        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
 -- 
 --        This file is part of the Mobilize Frameworks, which is
@@ -15,11 +15,54 @@
 -- </copyright>
 
 -- =============================================
--- Description: UDF for convert an Interval to Months
+-- Description: UDF for Teradata INTERVAL_MULTIPLY function
+-- =============================================
+CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL_MULTIPLY_UDF
+(INPUT_PART VARCHAR(30), INPUT_VALUE VARCHAR(), INPUT_MULT INTEGER)
+RETURNS VARCHAR
+IMMUTABLE
+AS
+$$
+CASE WHEN INPUT_PART = 'YEAR TO MONTH'
+THEN PUBLIC.MONTHS2INTERVAL_UDF(INPUT_PART, PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE) * INPUT_MULT)
+ELSE PUBLIC.SECONDS2INTERVAL_UDF(INPUT_PART, PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART, INPUT_VALUE) * INPUT_MULT)
+END
+$$;
+
+-- =============================================
+-- Description: UDF for Teradata INTERVAL_ADD function
+-- =============================================
+CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL_ADD_UDF
+(INPUT_VALUE1 VARCHAR(), INPUT_PART1 VARCHAR(30), INPUT_VALUE2 VARCHAR(), INPUT_PART2 VARCHAR(30), OP CHAR, OUTPUT_PART VARCHAR())
+RETURNS VARCHAR
+IMMUTABLE
+AS
+$$
+CASE 
+    WHEN INPUT_PART1 = 'YEAR TO MONTH' OR INPUT_PART2 = 'YEAR TO MONTH' THEN
+        CASE 
+            WHEN OP = '+' THEN
+                PUBLIC.SECONDS2INTERVAL_UDF(OUTPUT_PART, PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE1) + PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE2))
+            WHEN OP = '-' THEN
+                PUBLIC.SECONDS2INTERVAL_UDF(OUTPUT_PART, PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE1) - PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE2))
+        END
+    ELSE 
+        CASE 
+            WHEN OP = '+' THEN
+                PUBLIC.SECONDS2INTERVAL_UDF(OUTPUT_PART, PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART1, INPUT_VALUE1) + PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART2, INPUT_VALUE2))
+            WHEN OP = '-' THEN
+                PUBLIC.SECONDS2INTERVAL_UDF(OUTPUT_PART, PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART1, INPUT_VALUE1) - PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART2, INPUT_VALUE2))
+        END  
+END
+$$;
+
+-- =============================================
+-- Description: UDF for converting an Interval to Months
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL2MONTHS_UDF
 (INPUT_VALUE VARCHAR())
-RETURNS INTEGER 
+RETURNS INTEGER
+IMMUTABLE
 AS
 $$
 CASE WHEN SUBSTR(INPUT_VALUE,1,1) = '-' THEN
@@ -32,11 +75,12 @@ END
 $$;
 
 -- =============================================
--- Description: UDF for convert an Interval to Seconds
+-- Description: UDF for converting an Interval to Seconds
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL2SECONDS_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE VARCHAR())
-RETURNS DECIMAL(20,6) 
+RETURNS DECIMAL(20,6)
+IMMUTABLE
 AS
 $$
 CASE WHEN SUBSTR(INPUT_VALUE,1,1) = '-' THEN
@@ -89,11 +133,12 @@ END
 $$;
 
 -- =============================================
--- Description: UDF for convert Months to an Interval
+-- Description: UDF for converting Months to an Interval
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.MONTHS2INTERVAL_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE NUMBER)
 RETURNS VARCHAR
+IMMUTABLE
 AS
 $$
 DECODE(INPUT_PART,
@@ -104,11 +149,12 @@ DECODE(INPUT_PART,
 $$;
 
 -- =============================================
--- Description: UDF for convert Seconds to an Interval
+-- Description: UDF for converting Seconds to an Interval
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.SECONDS2INTERVAL_UDF
 (INPUT_PART VARCHAR(30), INPUT_VALUE NUMBER)
 RETURNS VARCHAR
+IMMUTABLE
 AS
 $$
 DECODE(INPUT_PART,
@@ -154,46 +200,6 @@ DECODE(INPUT_PART,
                                             CASE WHEN ABS(MOD(INPUT_VALUE, 60)) = 0 THEN '00' WHEN ABS(MOD(INPUT_VALUE, 60)) > -10 AND ABS(MOD(INPUT_VALUE, 60)) < 10 THEN '0' ELSE '' END || ABS(MOD(INPUT_VALUE, 60))::varchar,
                 'SECOND',             INPUT_VALUE::varchar
 )
-$$;
-
--- =============================================
--- Description: UDF for Teradata INTERVAL_MULTIPLY function
--- =============================================
-CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL_MULTIPLY_UDF
-(INPUT_PART VARCHAR(30), INPUT_VALUE VARCHAR(), INPUT_MULT INTEGER)
-RETURNS VARCHAR
-AS
-$$
-CASE WHEN INPUT_PART = 'YEAR TO MONTH'
-THEN PUBLIC.MONTHS2INTERVAL_UDF(INPUT_PART, PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE) * INPUT_MULT)
-ELSE PUBLIC.SECONDS2INTERVAL_UDF(INPUT_PART, PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART, INPUT_VALUE) * INPUT_MULT)
-END
-$$;
-
--- =============================================
--- Description: UDF for Teradata INTERVAL_ADD function
--- =============================================
-CREATE OR REPLACE FUNCTION PUBLIC.INTERVAL_ADD_UDF
-(INPUT_VALUE1 VARCHAR(), INPUT_PART1 VARCHAR(30), INPUT_VALUE2 VARCHAR(), INPUT_PART2 VARCHAR(30), OP CHAR, OUTPUT_PART VARCHAR())
-RETURNS VARCHAR
-AS
-$$
-CASE 
-    WHEN INPUT_PART1 = 'YEAR TO MONTH' OR INPUT_PART2 = 'YEAR TO MONTH' THEN
-        CASE 
-            WHEN OP = '+' THEN
-                PUBLIC.SECONDS2INTERVAL_UDF(OUTPUT_PART, PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE1) + PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE2))
-            WHEN OP = '-' THEN
-                PUBLIC.SECONDS2INTERVAL_UDF(OUTPUT_PART, PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE1) - PUBLIC.INTERVAL2MONTHS_UDF(INPUT_VALUE2))
-        END
-    ELSE 
-        CASE 
-            WHEN OP = '+' THEN
-                PUBLIC.SECONDS2INTERVAL_UDF(OUTPUT_PART, PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART1, INPUT_VALUE1) + PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART2, INPUT_VALUE2))
-            WHEN OP = '-' THEN
-                PUBLIC.SECONDS2INTERVAL_UDF(OUTPUT_PART, PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART1, INPUT_VALUE1) - PUBLIC.INTERVAL2SECONDS_UDF(INPUT_PART2, INPUT_VALUE2))
-        END  
-END
 $$;
 
 

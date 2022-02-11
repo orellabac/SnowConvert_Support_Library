@@ -15,57 +15,33 @@
 -- </copyright>
 
 -- =============================================
--- This file holds UDFs with that have the objective of emulating the functions related with the Teradata period type and its functions
--- Snowflake does not support the period type or its related functions, for more information on how SnowConvert handles periods and how these UDFs work please refer to
--- https://app.gitbook.com/@mobilizenet/s/snowconvert/for-teradata/issues/mscewi2053
--- =============================================
-
--- =============================================
--- Description: Emulates the behavior of the END function from Teradata
--- The input parameter should be a VARCHAR representing a period in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- Returns a timestamp representing the ending bound of the period
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_END_UDF('2015-02-13 12:15:30*2020-02-13 08:45:15')
--- Returns:
---      A timestamp with value 2020-02-13 08:45:15.000
+-- Description: Emulates the behavior of the END function
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_END_UDF(PERIOD_VAL VARCHAR(22))
 RETURNS TIMESTAMP
+IMMUTABLE
 AS
 $$
  CAST(SUBSTR(PERIOD_VAL,POSITION('*',PERIOD_VAL)+1) AS TIMESTAMP)
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the BEGIN function from Teradata
--- The input parameter should be a VARCHAR representing a period in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- Returns a timestamp representing the ending bound of the period
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_BEGIN_UDF('2020-10-05*2021-09-27')
--- Returns:
---      A timestamp with value 2020-10-05 00:00:00.000
+-- Description: Emulates the behavior of the BEGIN function
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_BEGIN_UDF(PERIOD_VAL VARCHAR(22))
 RETURNS TIMESTAMP
+IMMUTABLE
 AS
 $$
  CAST(SUBSTR(PERIOD_VAL,1, POSITION('*',PERIOD_VAL)-1) AS TIMESTAMP)
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the LDIFF function from Teradata
--- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- The result is either a period of the form 'beginningBound*EndingBound' that represensts the value of the RDIFF or null, check the Teradata documentation of LDIFF for more information on the results
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_LDIFF_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
--- Returns:
---       '2020-08-28*2020-12-15'
+-- Description: Emulates the behavior of the LDIFF function
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_LDIFF_UDF(PERIOD_1 VARCHAR(50), PERIOD_2 VARCHAR(50))
 RETURNS VARCHAR
+IMMUTABLE
 AS
 $$
  CASE WHEN PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_2, PERIOD_1) = 'TRUE' 
@@ -78,17 +54,11 @@ $$
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the RDIFF function from Teradata
--- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- The result is either a period of the form 'beginningBound*EndingBound' that represensts the value of the RDIFF or null, check the Teradata documentation of RDIFF for more information on the results
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_RDIFF_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
--- Returns:
---      '2023-05-18*2025-10-15'
+-- Description: Emulates the behavior of the RDIFF function
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_RDIFF_UDF(PERIOD_1 VARCHAR(50), PERIOD_2 VARCHAR(50))
 RETURNS VARCHAR
+IMMUTABLE
 AS
 $$
 CASE WHEN PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_2, PERIOD_1) = 'TRUE' 
@@ -101,17 +71,11 @@ CASE WHEN PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_2, PERIOD_1) = 'TRUE'
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the OVERLAPS function from Teradata
--- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- The result is a boolean that indicates if the two periods overlap, check the Teradata documentation of OVERLAPS for more information on the results
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_OVERLAPS_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
--- Returns:
---      TRUE
+-- Description: Emulates the behavior of the OVERLAPS function
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_1 VARCHAR(22), PERIOD_2 VARCHAR(22))
-RETURNS BOOLEAN 
+RETURNS BOOLEAN
+IMMUTABLE
 AS
 $$
  CASE WHEN 
@@ -135,6 +99,7 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIMESTAMP_NTZ, D2 TIMESTAMP_NTZ)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(D2)
@@ -145,6 +110,7 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 DATE, D2 DATE)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(D2)
@@ -157,6 +123,7 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIME, D2 TIME)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(D2)
@@ -168,6 +135,7 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIMESTAMP_NTZ, D2 TIMESTAMP_NTZ, PRECISIONDIGITS INT)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 CASE WHEN PRECISIONDIGITS <= 0 THEN
@@ -185,6 +153,7 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIME, D2 TIME, PRECISIONDIGITS INT)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 CASE WHEN PRECISIONDIGITS <= 0 THEN
@@ -203,6 +172,7 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIMESTAMP_NTZ)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(DATEADD(MICROSECOND, 1, D1))
@@ -213,6 +183,7 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 DATE)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(DATEADD(DAY, 1, D1))
@@ -225,6 +196,7 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIME)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(DATEADD(MICROSECOND, 1, D1))
