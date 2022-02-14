@@ -15,8 +15,23 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The DATEDIFF_UDF() is used as a template for all the cases when there is a substraction
--- between a date type and an unknown type.
+-- DESCRIPTION: The DATEDIFF_UDF() is used as a template for all the cases when there is a substraction
+-- between a date type and an unknown type and all the cases to get the differences between 2 DATES, or TIMESTAMPS.
+-- EQUIVALENT: Oracle DATE - DATE , DATE - TIMESTAMP, TIMESTAMP - DATE, DATE - FLOAT, TIMESTAMP - FLOAT
+-- NOTE: FOR TIMESTAMP - TIMESTAMP PLEASE REFER TO TIMESTAMP_DIFF_UDF()
+-- PARAMETERS:
+-- SCENARIO 1:
+-- 		FIRST_PARAM: DATE OR TIMESTAMP
+-- 		SECOND_PARAM: DATE OR TIMESTAMP TO BE SUBSTRACTED FROM FIRST_PARAM (FOR TIMESTAMP - TIMESTAMP PLEASE REFER TO TIMESTAMP_DIFF_UDF())
+--  RETURNS: THE NUMBER RESULT OF THE SUBSTRACTION BETWEEN THE INPUTS 
+--  EXAMPLE:
+-- 		SELECT DATEDIFF_UDF('2022-02-20','2022-02-14'); -- SELECT TO_DATE('2022-02-20','YYYY-MM-DD') - TO_DATE('2022-02-14','YYYY-MM-DD') FROM DUAL; -- RETURNS 6
+-- SCENARIO 2:
+--      FIRST_PARAM: DATE OR TIMESTAMP
+--      SECOND_PARAM: FLOAT TO BE SUBSTRACTED TO SECOND_PARAM, THE UNITS REPRESENT DAYS
+--  RETURNS: THE DATE RESULT OF THE SUBSTRACTION OF THE INPUTS
+--  EXAMPLE:
+--    	SELECT DATEDIFF_UDF('2022-02-14 15:31:00',6); -- SELECT TO_TIMESTAMP('2022-02-14 15:31:00','YYYY-MM-DD HH24:MI:SS') - 6 FROM DUAL; -- RETURNS '2022-02-08'
 -- =========================================================================================================
 CREATE OR REPLACE FUNCTION PUBLIC.DATEDIFF_UDF(FIRST_PARAM DATE, SECOND_PARAM DATE)
 RETURNS INTEGER

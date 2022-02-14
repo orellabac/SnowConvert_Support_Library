@@ -15,11 +15,17 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The DATE_TO_JULIANDAYS_UDF() function takes a DATE and returns the number of days since 
--- January 1, 4712 BC. This function is equivalent to the Oracle TO_CHAR(DATE,'J')
+-- DESCRIPTION: The DATE_TO_JULIANDAYS_UDF() takes a DATE and returns the number of days since January 1, 4712 BC. 
+-- EQUIVALENT: Oracle TO_CHAR(DATE,'J')
+-- PARAMETERS:
+-- D : DATE
+-- RETURNS: A STRING WITH NUMBERS OF DAYS SINCE JANUARY 1, 4712
+-- EXAMPLE:
+-- SELECT DATE_TO_JULIANDAYS_UDF(DATE '2020-01-01'); -- SELECT TO_CHAR(DATE '2020-01-01','J') from dual; -- returns 2458850
 -- =========================================================================================================
 CREATE OR REPLACE FUNCTION PUBLIC.DATE_TO_JULIANDAYS_UDF(D DATE) 
 RETURNS STRING 
+IMMUTABLE
 AS
 $$
   TRUNC(date_part('epoch',d) / 3600 / 24 + 2440588.0)::STRING

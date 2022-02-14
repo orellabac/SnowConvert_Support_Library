@@ -15,18 +15,40 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The REGEXP_LIKE_UDF() is created to achieve the functional equivalence in Snowflake 
+-- DESCRIPTION: The REGEXP_LIKE_UDF() is created to achieve the functional equivalence in Snowflake 
 -- of the REGEXP_LIKE oracle condition.
+-- EQUIVALENT: Oracle REGEXP_LIKE
+-- PARAMETERS:
+-- 	COL: IS A CHARACTER EXPRESSION THAT SERVES AS THE SEARCH VALUE.
+--  PATTERN: REGULAR EXPRESSION
+--  MATCHPARAM: IS A TEXT LITERAL THAT LETS YOU CHANGE THE DEFAULT MATCHING BEHAVIOR OF THE FUNCTION ('g' is for global. 
+--  'i' is for ignoreCase. 'm' is for multiline. 's' is for dotAll. 'y' is for sticky)
+-- EXAMPLE:
+--  Let's say table NAMES has a column called FIRST_NAME with the following values : ('Stephen','Steven','Steban','Esteven')
+--  1:
+--      SELECT FIRST_NAME FROM NAMES
+--      WHERE REGEXP_LIKE_UDF (first_name, 'Ste(v|ph)en$');
+--      RETURNS ('Stephen','Steven')
+--  2:
+--      SELECT FIRST_NAME FROM NAMES
+--      WHERE REGEXP_LIKE_UDF (first_name, 'Ste(v|ph)en$','i');
+--      RETURNS ('Stephen','Steven','Esteven') 
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION REGEXP_LIKE_UDF(COL STRING, PATTERN STRING, MATCHPARAM STRING) 
-RETURNS BOOLEAN LANGUAGE JAVASCRIPT AS
+RETURNS BOOLEAN 
+LANGUAGE JAVASCRIPT 
+IMMUTABLE
+AS
 $$
 return COL.match(new RegExp(PATTERN, MATCHPARAM));
 $$;
 
 CREATE OR REPLACE FUNCTION REGEXP_LIKE_UDF(COL STRING, PATTERN STRING) 
-RETURNS BOOLEAN LANGUAGE JAVASCRIPT AS
+RETURNS BOOLEAN 
+LANGUAGE JAVASCRIPT 
+IMMUTABLE
+AS
 $$
 return COL.match(new RegExp(PATTERN));
 $$;

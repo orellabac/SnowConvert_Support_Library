@@ -19,10 +19,11 @@
 -- ISNUMERIC returns 1 when the input expression evaluates to a valid numeric data type; otherwise it returns 0.
 -- =========================================================================================================
 
-create or replace function ISNUMERIC_UDF(v VARCHAR)
-returns INTEGER
-language sql
-as 
+CREATE OR REPLACE FUNCTION ISNUMERIC_UDF(V VARCHAR)
+RETURNS INTEGER
+LANGUAGE SQL
+IMMUTABLE
+AS 
 $$
     SELECT CASE WHEN TRY_TO_NUMERIC(V) IS NULL THEN 0 ELSE 1 END
 $$;

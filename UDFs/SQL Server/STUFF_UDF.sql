@@ -20,8 +20,9 @@
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION PUBLIC.STUFF_UDF(S string, STARTPOS int, LENGTH int, NEWSTRING string)
-RETURNS string
+RETURNS STRING
 LANGUAGE SQL
+IMMUTABLE
 AS 
 $$
  left(S, STARTPOS) || NEWSTRING || substr(S, STARTPOS + LENGTH + 1) 

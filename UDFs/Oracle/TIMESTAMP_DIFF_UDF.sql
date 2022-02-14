@@ -15,10 +15,23 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The TIMESTAMP_DIFF_UDF() is used to achieve the timestamps arithmetic operations
+-- DESCRIPTION: The TIMESTAMP_DIFF_UDF() is used to achieve the timestamps arithmetic operations
 -- functional equivalence in Snowflake.
+-- EQUIVALENT: Oracle TIMESTAMP - TIMESTAMP
+-- NOTE: FOR OTHER CASES SUCH AS DATE - TIMESTAMP, DATE - DATE ETC PLEASE REFER TO DATE_DIFF_UDF()
+-- PARAMETERS:
+-- LEFT_TS: DATE OR TIMESTAMP
+-- RIGHT_TS: DATE OR TIMESTAMP TO BE SUBSTRACTED FROM LEFT_TS
+-- RETURNS: THE TIMESTAMP RESULT OF THE SUBSTRACTION BETWEEN THE INPUTS 
+-- EXAMPLE:
+--  SELECT TIMESTAMP_DIFF_UDF('2022-02-15 15:31:00', '2022-02-14 14:31:00'); -- SELECT TO_TIMESTAMP('2022-02-15 15:31:00','YYYY-MM-DD HH24:MI:SS') - TO_TIMESTAMP('2022-02-14 14:31:00','YYYY-MM-DD HH24:MI:SS') FROM DUAL; 
+--  RETURNS '+000000001 01:00:00.00000000'
 -- =========================================================================================================
-CREATE OR REPLACE FUNCTION TIMESTAMP_DIFF_UDF(LEFT_TS TIMESTAMP, RIGHT_TS TIMESTAMP ) RETURNS VARCHAR LANGUAGE SQL AS
+CREATE OR REPLACE FUNCTION TIMESTAMP_DIFF_UDF(LEFT_TS TIMESTAMP, RIGHT_TS TIMESTAMP ) 
+RETURNS VARCHAR 
+LANGUAGE SQL 
+IMMUTABLE
+AS
 $$
 WITH RESULTS(days,hours,min,sec,millisecond,sign) AS
 (
