@@ -15,7 +15,7 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The UPDATE_ERROR_VARS_UDF() function updates the error variables in environment in order to know when the procedure throws an error. 
+-- Description: The UPDATE_ERROR_VARS_UDF() function updates the error variables in environment in order to know when the procedure throws an error. documentacion para manejo de errores 
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION UPDATE_ERROR_VARS_UDF(LINE STRING,CODE STRING, STATE STRING, MESSAGE STRING, PROC_NAME STRING, SEVERITY STRING) 
