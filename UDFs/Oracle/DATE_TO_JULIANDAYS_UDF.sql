@@ -21,7 +21,8 @@
 -- D : DATE
 -- RETURNS: A STRING WITH NUMBERS OF DAYS SINCE JANUARY 1, 4712
 -- EXAMPLE:
--- SELECT DATE_TO_JULIANDAYS_UDF(DATE '2020-01-01'); -- SELECT TO_CHAR(DATE '2020-01-01','J') from dual; -- returns 2458850
+--  SELECT DATE_TO_JULIANDAYS_UDF(DATE '2020-01-01'); -- SELECT TO_CHAR(DATE '2020-01-01','J') from dual; 
+--  RETURNS 2458850
 -- =========================================================================================================
 CREATE OR REPLACE FUNCTION PUBLIC.DATE_TO_JULIANDAYS_UDF(D DATE) 
 RETURNS STRING 
