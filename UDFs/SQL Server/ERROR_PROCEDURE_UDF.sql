@@ -15,8 +15,8 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The ISNUMERIC() function Determines whether an expression is a valid numeric type. 
--- ISNUMERIC returns 1 when the input expression evaluates to a valid numeric data type; otherwise it returns 0.
+-- DESCRIPTION: THE ERROR_PROCEDURE_UDF() RETURNS THE NAME OF THE STORED PROCEDURE OR TRIGGER WHERE AN ERROR OCCURS, IF THAT ERROR CAUSED THE CATCH BLOCK WITHIN THE EXEC HELPER.
+-- EQUIVALENT: SQL SERVER'S ERROR_PROCEDURE()
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION ERROR_PROCEDURE_UDF() 

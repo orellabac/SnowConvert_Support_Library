@@ -15,8 +15,16 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The QUOTENAME() function makes a valid  SQL Server delimited identifier by returning a
--- Unicode string with the delimiters added.
+-- DESCRIPTION: THE QUOTENAME_UDF() FUNCTION MAKES A VALID SQL SERVER DELIMITED IDENTIFIER BY RETURNING A
+-- UNICODE STRING WITH THE DELIMITERS ADDED.
+-- EQUIVALENT: SQLSERVER'S QUOTENAME(CHARACTER_STRING, QUOTE_CHARACTER)
+-- PARAMETERS:
+-- STR : CHARACTER DATA TO BE QUOTED.
+-- QUOTECHAR: STRING TO USE AS THE DELIMITER.
+-- RETURNS: STR INPUT WITHIN QUOTECHAR INPUT.
+-- EXAMPLE:
+--  SELECT QUOTENAME_UDF('MOBILIZE.NET','{}'); -- SELECT QUOTENAME('MOBILIZE.NET','{}');
+--  RETURNS {MOBILIZE.NET}
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION QUOTENAME_UDF(STR VARCHAR) 

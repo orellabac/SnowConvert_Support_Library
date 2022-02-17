@@ -15,8 +15,9 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The ERROR_SEVERITY() function gets a value indicating the severity of an error. Default value will
--- always be 16.
+-- DESCRIPTION: THE ERROR_SEVERITY_UDF() RETURNS THE SEVERITY VALUE OF THE ERROR WHERE AN ERROR OCCURS, IF THAT ERROR CAUSED THE CATCH BLOCK WITHIN THE EXEC HELPER. 
+-- DEFAULT VALUE WILL ALWAYS BE 16.
+-- EQUIVALENT: SQL SERVER'S ERROR_SEVERITY()
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION ERROR_SEVERITY_UDF() 

@@ -15,7 +15,14 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The OBJECT_ID_TABLE_UDF() function checks if a Table with an specific name has been create before. 
+-- DESCRIPTION: THE OBJECT_ID_TABLE_UDF() FUNCTION CHECKS IF A TABLE WITH AN SPECIFIC NAME HAS BEEN CREATED BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : TABLE TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT TABLE EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT TABLE_OBJECT_ID_UDF('SCHEMA.TABLE_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.TABLE_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION TABLE_OBJECT_ID_UDF(NAME VARCHAR) 
@@ -28,7 +35,14 @@ $$
 $$;
 
 -- =========================================================================================================
--- Description: The OBJECT_ID_VIEW_UDF() function checks if a View with an specific name has been create before. 
+-- DESCRIPTION: THE VIEW_OBJECT_ID_UDF() FUNCTION CHECKS IF A VIEW WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : VIEW TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT VIEW EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT VIEW_OBJECT_ID_UDF('SCHEMA.VIEW_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.VIEW_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION VIEW_OBJECT_ID_UDF(NAME VARCHAR) 
@@ -41,7 +55,14 @@ $$
 $$;
 
 -- =========================================================================================================
--- Description: The OBJECT_ID_FUNCTION_UDF() function checks if a Function with an specific name has been create before. 
+-- DESCRIPTION: THE FUNCTION_OBJECT_ID_UDF() FUNCTION CHECKS IF A FUNCTION WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : FUNCTION TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT FUNCTION EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT FUNCTION_OBJECT_ID_UDF('SCHEMA.FUNCTION_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.FUNCTION_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION FUNCTION_OBJECT_ID_UDF(NAME VARCHAR) 
@@ -54,7 +75,14 @@ $$
 $$;
 
 -- =========================================================================================================
--- Description: The OBJECT_ID_PROCEDURE_UDF() function checks if a Procedure with an specific name has been create before. 
+-- DESCRIPTION: THE PROCEDURE_OBJECT_ID_UDF() FUNCTION CHECKS IF A PROCEDURE WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : PROCEDURE TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT PROCEDURE EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT PROCEDURE_OBJECT_ID_UDF('SCHEMA.PROCEDURE_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.PROCEDURE_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION PROCEDURE_OBJECT_ID_UDF(NAME VARCHAR) 
@@ -67,7 +95,14 @@ $$
 $$;
 
 -- =========================================================================================================
--- Description: The OBJECT_ID_CONSTRAINT_UDF() function checks if a Constraint with an specific name has been create before. 
+-- DESCRIPTION: THE CONSTRAINT_OBJECT_ID_UDF() FUNCTION CHECKS IF A CONSTRAINT WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : CONSTRAINT TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT CONSTRAINT EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT CONSTRAINT_OBJECT_ID_UDF('SCHEMA.CONSTRAINT_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.CONSTRAINT_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION CONSTRAINT_OBJECT_ID_UDF(NAME VARCHAR) 
@@ -80,7 +115,14 @@ $$
 $$;
 
 -- =========================================================================================================
--- Description: The OBJECT_ID_SEQUENCE_UDF() function checks if a Sequence with an specific name has been create before. 
+-- DESCRIPTION: THE SEQUENCE_OBJECT_ID_UDF() FUNCTION CHECKS IF A SEQUENCE WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : SEQUENCE TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT SEQUENCE EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT SEQUENCE_OBJECT_ID_UDF('SCHEMA.SEQUENCE_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.SEQUENCE_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION SEQUENCE_OBJECT_ID_UDF(NAME VARCHAR) 
@@ -93,7 +135,14 @@ $$
 $$;
 
 -- =========================================================================================================
--- Description: The OBJECT_ID_OBJECT_UDF() function checks if an Object with an specific name has been create before. 
+-- DESCRIPTION: THE OBJECT_ID_UDF() FUNCTION CHECKS IF AN OBJECT WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : OBJECT TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT OBJECT EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT OBJECT_ID_UDF('SCHEMA.OBJECT_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.OBJECT_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION OBJECT_ID_UDF(NAME VARCHAR) 

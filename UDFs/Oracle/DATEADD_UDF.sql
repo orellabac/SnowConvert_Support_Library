@@ -15,9 +15,9 @@
 -- </copyright>
 
 -- =========================================================================================================
--- DESCRIPTION: The DATEADD_UDF() is used as a template for all the cases when there is an addition
--- between a date type and an unknown type like a FLOAT.
--- EQUIVALENT: Oracle DATE + FLOAT , TIMESTAMP + FLOAT, FLOAT + DATE , FLOAT +TIMESTAMP
+-- DESCRIPTION: THE DATEADD_UDF() IS USED AS A TEMPLATE FOR ALL THE CASES WHEN THERE IS AN ADDITION
+-- BETWEEN A DATE TYPE AND AN UNKNOWN TYPE LIKE A FLOAT.
+-- EQUIVALENT: ORACLE DATE + FLOAT , TIMESTAMP + FLOAT, FLOAT + DATE , FLOAT +TIMESTAMP
 -- PARAMETERS:
 -- SCENARIO 1:
 --      FIRST_PARAM: DATE OR TIMESTAMP
