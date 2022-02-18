@@ -15,13 +15,22 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The PATINDEX function returns the starting position of the first occurrence of a pattern 
--- in a specified expression or zeros if the pattern is not found
+-- DESCRIPTION: THE PATINDEX_UDF() FUNCTION RETURNS THE STARTING POSITION OF THE FIRST OCCURRENCE OF A PATTERN 
+-- IN A SPECIFIED EXPRESSION OR ZEROS IF THE PATTERN IS NOT FOUND
+-- EQUIVALENT: SQLSERVER'S PATINDEX('%PATTERN%' , EXPRESSION)
+-- PARAMETERS:
+-- PATTERN : CHARACTER EXPRESSION THAT CONTAINS THE SEQUENCE TO BE FOUND.
+-- EXPRESSION: COLUMN OR EXPRESSION THAT IS SEARCHED FOR THE SPECIFIED PATTERN
+-- RETURNS: NUMBER WITH THE STARTING POSITION OF THE FIRST OCCURRENCE OF A PATTERN IN A SPECIFIED EXPRESSION OR ZEROS IF THE PATTERN IS NOT FOUND.
+-- EXAMPLE:
+--  SELECT PATINDEX_UDF('%.net%','Mobilize.net'); -- SELECT PATINDEX('%.net%','Mobilize.net');
+--  RETURNS 9
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION PATINDEX_UDF(PATTERN VARCHAR, EXPRESSION VARCHAR)
 RETURNS INTEGER
 LANGUAGE SQL
+IMMUTABLE
 AS
 $$
   SELECT CHARINDEX(TRIM(PATTERN, '%'), EXPRESSION)

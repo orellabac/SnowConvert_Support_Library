@@ -15,13 +15,14 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The ISNUMERIC() function Determines whether an expression is a valid numeric type. 
--- ISNUMERIC returns 1 when the input expression evaluates to a valid numeric data type; otherwise it returns 0.
+-- DESCRIPTION: THE ERROR_LINE_UDF() RETURNS THE LINE NUMBER OF OCCURRENCE OF AN ERROR THAT CAUSED THE CATCH BLOCK WITHIN THE EXEC HELPER.
+-- EQUIVALENT: SQL SERVER'S ERROR_LINE()
 -- =========================================================================================================
 
 CREATE OR REPLACE FUNCTION ERROR_LINE_UDF() 
 RETURNS STRING
 LANGUAGE SQL 
+IMMUTABLE
 AS
 $$
 	SELECT GETVARIABLE('ERROR_LINE')

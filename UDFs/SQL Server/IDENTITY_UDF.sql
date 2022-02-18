@@ -19,10 +19,11 @@
 -- ISNUMERIC returns 1 when the input expression evaluates to a valid numeric data type; otherwise it returns 0.
 -- =========================================================================================================
 
-create or replace function IDENTITY_UDF()
-returns INTEGER
-language sql
-as
+CREATE OR REPLACE FUNCTION IDENTITY_UDF()
+RETURNS INTEGER
+LANGUAGE SQL
+IMMUTABLE
+AS
 $$
   SnowConvert_Temp_Seq.nextval
 $$

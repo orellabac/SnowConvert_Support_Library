@@ -15,14 +15,21 @@
 -- </copyright>
 
 -- =======================================================================================================
--- Description: The ISDATE function Determines whether an expression is a valid date type. 
--- ISDATE returns 1 when the input expression evaluates to a valid date data type; otherwise it returns 0.
+-- DESCRIPTION: THE ISDATE_UDF() FUNCTION DETERMINES WHETHER AN EXPRESSION IS A VALID DATE TYPE. 
+-- EQUIVALENT: SQLSERVER'S ISDATE(DATE)
+-- PARAMETERS:
+-- V : EXPRESSION TO BE EVALUATED
+-- RETURNS: 1 WHEN THE INPUT EXPRESSION EVALUATES TO A VALID DATE DATA TYPE; OTHERWISE IT RETURNS 0.
+-- EXAMPLE:
+--  SELECT ISDATE_UDF('2022-02-14'); -- SELECT ISDATE('2022-02-14'); 
+--  RETURNS 1
 -- =======================================================================================================
 
 CREATE OR REPLACE FUNCTION ISDATE_UDF(V VARCHAR)
-RETURNS BOOLEAN
+RETURNS INTEGER
 LANGUAGE SQL
+IMMUTABLE
 AS 
 $$
-    SELECT IFF(TRY_TO_DATE(V) IS NULL, 0, 1) = 0
+    SELECT IFF(TRY_TO_DATE(V) IS NULL, 0, 1)
 $$;

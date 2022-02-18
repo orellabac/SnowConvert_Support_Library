@@ -16,9 +16,13 @@
 
 -- =========================================================================================================
 -- DESCRIPTION: UDF THAT TRANSFORMS A JULIAN DATE (YYYYDDD) INTO THE DATE IT REPRESENTS
+-- EQUIVALENT: 
 -- PARAMETERS:
 -- JULAN DATE: CHAR - THE JULIAN DATE TO TRANSFORM
 -- RETURNS: THE DATE REPRESENTATION OF THE JULIAN DATE OR NULL IF CONVERSION IS NOT POSSIBLE
+-- EXAMPLE:
+--  SELECT JULIAN_TO_DATE_UDF('2022045');
+--  RETURNS '2022-02-14'
 -- =========================================================================================================
 CREATE OR REPLACE FUNCTION PUBLIC.JULIAN_TO_DATE_UDF(JULIAN_DATE CHAR(7))
 RETURNS DATE  

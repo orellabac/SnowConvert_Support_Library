@@ -15,14 +15,21 @@
 -- </copyright>
 
 -- =========================================================================================================
--- Description: The ISNUMERIC() function Determines whether an expression is a valid numeric type. 
--- ISNUMERIC returns 1 when the input expression evaluates to a valid numeric data type; otherwise it returns 0.
+-- DESCRIPTION: THE ISNUMERIC() FUNCTION DETERMINES WHETHER AN EXPRESSION IS A VALID NUMERIC TYPE. 
+-- EQUIVALENT: SQLSERVER'S ISNUMERIC(NUMBER)
+-- PARAMETERS:
+-- V : EXPRESSION TO BE EVALUATED
+-- RETURNS: 1 WHEN THE INPUT EXPRESSION EVALUATES TO A VALID NUMERIC DATA TYPE; OTHERWISE IT RETURNS 0.
+-- EXAMPLE:
+--  SELECT ISNUMERIC_UDF(10.5); -- SELECT ISNUMERIC(10.5); 
+--  RETURNS 1
 -- =========================================================================================================
 
-create or replace function ISNUMERIC_UDF(v VARCHAR)
-returns INTEGER
-language sql
-as 
+CREATE OR REPLACE FUNCTION ISNUMERIC_UDF(V VARCHAR)
+RETURNS INTEGER
+LANGUAGE SQL
+IMMUTABLE
+AS 
 $$
     SELECT CASE WHEN TRY_TO_NUMERIC(V) IS NULL THEN 0 ELSE 1 END
 $$;
