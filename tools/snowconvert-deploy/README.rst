@@ -15,6 +15,9 @@ Installation
     
 .. note:: If you run this command on MacOS change `pip` by `pip3`
 
+You might need to install the python connecto for snowflake: pip install "snowflake-connector-python[pandas]"
+
+
 
 Usage
 -----

@@ -416,7 +416,7 @@ if __name__ == "__main__":
     - Snowflake Role
     - Snowflake Database
 
-    If the tool can find a config_snowsql.ini file in the current directory or in the workspace\\config_snowsql.ini location
+    If the tool can find a config_snowsql.ini file in the current directory or in the workspace\\config_snowsql.ini location or ~/.snowsql/config
     it will read those parameters from there.""",formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-A"            ,"--Account",  dest="Account",   help = "Snowflake Account")
     parser.add_argument("-D"            ,"--Database", dest="Database",  help = "Snowflake Database")
@@ -468,6 +468,10 @@ if __name__ == "__main__":
         ini_path = os.path.join(args.Workspace,'config_snowsql.ini')
     if not ini_path and os.path.exists('config_snowsql.ini'):
         ini_path = 'config_snowsql.ini'
+    if not ini_path:
+        ini_path = os.path.expanduser("~/.snowsql/config")
+        if not os.path.exists(ini_path):
+            print(f"ERROR: Ini at {ini_path} was not found")
     # if an ini file was found read some settings from there
     # we avoid reading user and password from this file
     if ini_path and config.read(ini_path):
@@ -501,4 +505,7 @@ if __name__ == "__main__":
     else:
         if args.SplitAfter:
             split = 2
+    if not sf_password and not sf_authenticator:
+        from getpass import getpass
+        sf_password = getpass()
     main(input_script, args.Workspace, split,args.SplitBefore or args.SplitAfter,args.ObjectType, sf_authenticator)

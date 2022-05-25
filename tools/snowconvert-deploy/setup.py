@@ -26,7 +26,7 @@ CLASSIFIERS = [
 ]
 
 DEPENDENCIES = [
-    'snowflake-connector-python>=2.4.6',
+    'snowflake-connector-python>=2.7.7',
     'oscrypto>=1.2.1'
 ]
 
