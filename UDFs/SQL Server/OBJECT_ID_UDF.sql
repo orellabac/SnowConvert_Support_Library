@@ -1,0 +1,155 @@
+﻿-- <copyright file="OBJECT_ID_UDF.cs" company="Mobilize.Net">
+--        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
+-- 
+--        This file is part of the Mobilize Frameworks, which is
+--        proprietary and confidential.
+-- 
+--        NOTICE:  All information contained herein is, and remains
+--        the property of Mobilize.Net Corporation.
+--        The intellectual and technical concepts contained herein are
+--        proprietary to Mobilize.Net Corporation and may be covered
+--        by U.S. Patents, and are protected by trade secret or copyright law.
+--        Dissemination of this information or reproduction of this material
+--        is strictly forbidden unless prior written permission is obtained
+--        from Mobilize.Net Corporation.
+-- </copyright>
+
+-- =========================================================================================================
+-- DESCRIPTION: THE OBJECT_ID_TABLE_UDF() FUNCTION CHECKS IF A TABLE WITH AN SPECIFIC NAME HAS BEEN CREATED BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : TABLE TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT TABLE EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT TABLE_OBJECT_ID_UDF('SCHEMA.TABLE_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.TABLE_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
+-- =========================================================================================================
+
+CREATE OR REPLACE FUNCTION TABLE_OBJECT_ID_UDF(NAME VARCHAR) 
+RETURNS BOOLEAN 
+LANGUAGE SQL 
+IMMUTABLE
+AS 
+$$
+	EXISTS (SELECT TABLE_SCHEMA || '.' || TABLE_NAME AS object_id FROM INFORMATION_SCHEMA.TABLES WHERE object_id = NAME)
+$$;
+
+-- =========================================================================================================
+-- DESCRIPTION: THE VIEW_OBJECT_ID_UDF() FUNCTION CHECKS IF A VIEW WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : VIEW TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT VIEW EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT VIEW_OBJECT_ID_UDF('SCHEMA.VIEW_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.VIEW_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
+-- =========================================================================================================
+
+CREATE OR REPLACE FUNCTION VIEW_OBJECT_ID_UDF(NAME VARCHAR) 
+RETURNS BOOLEAN 
+LANGUAGE SQL 
+IMMUTABLE
+AS 
+$$
+	EXISTS (SELECT TABLE_SCHEMA || '.' || TABLE_NAME AS object_id FROM INFORMATION_SCHEMA.VIEWS WHERE object_id = NAME)
+$$;
+
+-- =========================================================================================================
+-- DESCRIPTION: THE FUNCTION_OBJECT_ID_UDF() FUNCTION CHECKS IF A FUNCTION WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : FUNCTION TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT FUNCTION EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT FUNCTION_OBJECT_ID_UDF('SCHEMA.FUNCTION_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.FUNCTION_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
+-- =========================================================================================================
+
+CREATE OR REPLACE FUNCTION FUNCTION_OBJECT_ID_UDF(NAME VARCHAR) 
+RETURNS BOOLEAN 
+LANGUAGE SQL 
+IMMUTABLE
+AS 
+$$
+	EXISTS (SELECT FUNCTION_SCHEMA || '.' || FUNCTION_NAME AS object_id FROM INFORMATION_SCHEMA.FUNCTIONS WHERE object_id = NAME)
+$$;
+
+-- =========================================================================================================
+-- DESCRIPTION: THE PROCEDURE_OBJECT_ID_UDF() FUNCTION CHECKS IF A PROCEDURE WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : PROCEDURE TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT PROCEDURE EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT PROCEDURE_OBJECT_ID_UDF('SCHEMA.PROCEDURE_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.PROCEDURE_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
+-- =========================================================================================================
+
+CREATE OR REPLACE FUNCTION PROCEDURE_OBJECT_ID_UDF(NAME VARCHAR) 
+RETURNS BOOLEAN 
+LANGUAGE SQL 
+IMMUTABLE
+AS 
+$$
+	EXISTS (SELECT PROCEDURE_SCHEMA || '.' || PROCEDURE_NAME AS object_id FROM INFORMATION_SCHEMA.PROCEDURES WHERE object_id = NAME)
+$$;
+
+-- =========================================================================================================
+-- DESCRIPTION: THE CONSTRAINT_OBJECT_ID_UDF() FUNCTION CHECKS IF A CONSTRAINT WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : CONSTRAINT TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT CONSTRAINT EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT CONSTRAINT_OBJECT_ID_UDF('SCHEMA.CONSTRAINT_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.CONSTRAINT_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
+-- =========================================================================================================
+
+CREATE OR REPLACE FUNCTION CONSTRAINT_OBJECT_ID_UDF(NAME VARCHAR) 
+RETURNS BOOLEAN 
+LANGUAGE SQL 
+IMMUTABLE
+AS 
+$$
+	EXISTS (SELECT CONSTRAINT_SCHEMA || '.' || CONSTRAINT_NAME AS object_id FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE object_id = NAME)
+$$;
+
+-- =========================================================================================================
+-- DESCRIPTION: THE SEQUENCE_OBJECT_ID_UDF() FUNCTION CHECKS IF A SEQUENCE WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : SEQUENCE TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT SEQUENCE EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT SEQUENCE_OBJECT_ID_UDF('SCHEMA.SEQUENCE_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.SEQUENCE_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
+-- =========================================================================================================
+
+CREATE OR REPLACE FUNCTION SEQUENCE_OBJECT_ID_UDF(NAME VARCHAR) 
+RETURNS BOOLEAN 
+LANGUAGE SQL 
+IMMUTABLE
+AS 
+$$
+	EXISTS (SELECT SEQUENCE_SCHEMA || '.' || SEQUENCE_NAME AS object_id FROM INFORMATION_SCHEMA.SEQUENCES WHERE object_id = NAME)
+$$;
+
+-- =========================================================================================================
+-- DESCRIPTION: THE OBJECT_ID_UDF() FUNCTION CHECKS IF AN OBJECT WITH AN SPECIFIC NAME HAS BEEN CREATE BEFORE. 
+-- EQUIVALENT: SQLSERVER'S SELECT CASE WHEN OBJECT_ID(NAME) IS NOT NULL THEN 1 ELSE 0 END
+-- PARAMETERS:
+-- NAME : OBJECT TO BE CHECKED
+-- RETURNS: TRUE WHEN THE INPUT OBJECT EXISTS IN THE DB; OTHERWISE IT RETURNS FALSE.
+-- EXAMPLE:
+--  SELECT OBJECT_ID_UDF('SCHEMA.OBJECT_NAME'); -- SELECT CASE WHEN OBJECT_ID('SCHEMA.OBJECT_NAME') IS NOT NULL THEN 1 ELSE 0 END;
+--  RETURNS TRUE
+-- =========================================================================================================
+
+CREATE OR REPLACE FUNCTION OBJECT_ID_UDF(NAME VARCHAR) 
+RETURNS BOOLEAN 
+LANGUAGE SQL 
+IMMUTABLE
+AS 
+$$
+	EXISTS (SELECT OBJECT_SCHEMA || '.' || OBJECT_NAME AS object_id FROM INFORMATION_SCHEMA.OBJECT_PRIVILEGES WHERE object_id = NAME)
+$$;

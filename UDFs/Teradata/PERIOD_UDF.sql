@@ -15,57 +15,36 @@
 -- </copyright>
 
 -- =============================================
--- This file holds UDFs with that have the objective of emulating the functions related with the Teradata period type and its functions
--- Snowflake does not support the period type or its related functions, for more information on how SnowConvert handles periods and how these UDFs work please refer to
--- https://app.gitbook.com/@mobilizenet/s/snowconvert/for-teradata/issues/mscewi2053
--- =============================================
-
--- =============================================
--- Description: Emulates the behavior of the END function from Teradata
--- The input parameter should be a VARCHAR representing a period in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- Returns a timestamp representing the ending bound of the period
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_END_UDF('2015-02-13 12:15:30*2020-02-13 08:45:15')
--- Returns:
---      A timestamp with value 2020-02-13 08:45:15.000
+-- DESCRIPTION: EMULATES THE BEHAVIOR OF THE END FUNCTION
+-- EQUIVALENT: TERADATA'S END FUNCTION
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_END_UDF(PERIOD_VAL VARCHAR(22))
 RETURNS TIMESTAMP
+IMMUTABLE
 AS
 $$
  CAST(SUBSTR(PERIOD_VAL,POSITION('*',PERIOD_VAL)+1) AS TIMESTAMP)
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the BEGIN function from Teradata
--- The input parameter should be a VARCHAR representing a period in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- Returns a timestamp representing the ending bound of the period
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_BEGIN_UDF('2020-10-05*2021-09-27')
--- Returns:
---      A timestamp with value 2020-10-05 00:00:00.000
+-- DESCRIPTION: EMULATES THE BEHAVIOR OF THE BEGIN FUNCTION
+-- EQUIVALENT: TERADATA'S BEGIN FUNCTION
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_BEGIN_UDF(PERIOD_VAL VARCHAR(22))
 RETURNS TIMESTAMP
+IMMUTABLE
 AS
 $$
  CAST(SUBSTR(PERIOD_VAL,1, POSITION('*',PERIOD_VAL)-1) AS TIMESTAMP)
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the LDIFF function from Teradata
--- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- The result is either a period of the form 'beginningBound*EndingBound' that represensts the value of the RDIFF or null, check the Teradata documentation of LDIFF for more information on the results
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_LDIFF_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
--- Returns:
---       '2020-08-28*2020-12-15'
+-- DESCRIPTION: EMULATES THE BEHAVIOR OF THE LDIFF FUNCTION
+-- EQUIVALENT: TERADATA'S LDIFF FUNCTION
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_LDIFF_UDF(PERIOD_1 VARCHAR(50), PERIOD_2 VARCHAR(50))
 RETURNS VARCHAR
+IMMUTABLE
 AS
 $$
  CASE WHEN PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_2, PERIOD_1) = 'TRUE' 
@@ -78,17 +57,12 @@ $$
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the RDIFF function from Teradata
--- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- The result is either a period of the form 'beginningBound*EndingBound' that represensts the value of the RDIFF or null, check the Teradata documentation of RDIFF for more information on the results
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_RDIFF_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
--- Returns:
---      '2023-05-18*2025-10-15'
+-- DESCRIPTION: EMULATES THE BEHAVIOR OF THE RDIFF FUNCTION
+-- EQUIVALENT: TERADATA'S RDIFF FUNCTION
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_RDIFF_UDF(PERIOD_1 VARCHAR(50), PERIOD_2 VARCHAR(50))
 RETURNS VARCHAR
+IMMUTABLE
 AS
 $$
 CASE WHEN PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_2, PERIOD_1) = 'TRUE' 
@@ -101,17 +75,12 @@ CASE WHEN PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_2, PERIOD_1) = 'TRUE'
 $$;
 
 -- =============================================
--- Description: Emulates the behavior of the OVERLAPS function from Teradata
--- Both parameters should be VARCHAR representing periods in the form 'beginningBound*EndingBound' as specified in MSCEWI2053 documentation
--- The result is a boolean that indicates if the two periods overlap, check the Teradata documentation of OVERLAPS for more information on the results
--- Example:
--- Input:
---      SELECT PUBLIC.PERIOD_OVERLAPS_UDF('2020-08-28*2025-10-15', '2020-12-15*2023-05-18');
--- Returns:
---      TRUE
+-- DESCRIPTION: EMULATES THE BEHAVIOR OF THE OVERLAPS FUNCTION
+-- EQUIVALENT: TERADATA'S OVERLAPS FUNCTION
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_OVERLAPS_UDF(PERIOD_1 VARCHAR(22), PERIOD_2 VARCHAR(22))
-RETURNS BOOLEAN 
+RETURNS BOOLEAN
+IMMUTABLE
 AS
 $$
  CASE WHEN 
@@ -129,22 +98,24 @@ END
 $$;
 
 -- =============================================
--- Description: Generates a varchar representation of the two bounds of a period(timestamp) value, used to emulate the Teradata Period Value Constructor Function.
--- This version generates the resulting string using the default format Snowflake has for representing timestamp values, if you require less or more precision
--- either change the session parameter TIMESTAMP_OUTPUT_FORMAT or use the three parameters version of this UDF 
+-- DESCRIPTION: GENERATES A VARCHAR REPRESENTATION OF THE TWO BOUNDS OF A PERIOD(TIMESTAMP) VALUE, USED TO EMULATE THE TERADATA PERIOD VALUE CONSTRUCTOR FUNCTION.
+-- THIS VERSION GENERATES THE RESULTING STRING USING THE DEFAULT FORMAT SNOWFLAKE HAS FOR REPRESENTING TIMESTAMP VALUES, IF YOU REQUIRE LESS OR MORE PRECISION
+-- EITHER CHANGE THE SESSION PARAMETER TIMESTAMP_OUTPUT_FORMAT OR USE THE THREE PARAMETERS VERSION OF THIS UDF 
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIMESTAMP_NTZ, D2 TIMESTAMP_NTZ)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(D2)
 $$;
 
 -- =============================================
--- Description: Generates a varchar representation of the two bounds of a period(date) value, used to emulate the Teradata Period Value Constructor Function.
+-- DESCRIPTION: GENERATES A VARCHAR REPRESENTATION OF THE TWO BOUNDS OF A PERIOD(DATE) VALUE, USED TO EMULATE THE TERADATA PERIOD VALUE CONSTRUCTOR FUNCTION.
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 DATE, D2 DATE)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(D2)
@@ -157,17 +128,19 @@ $$;
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIME, D2 TIME)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(D2)
 $$;
 
 -- =============================================
--- Description: Generates a varchar representation of the two bounds of a period(timestamp) value, this version allows to define how many precision digits are
--- desired in the result (up to 9, however, please keep in mind Teradata maximum precision for timestamps is 6)
+-- DESCRIPTION: GENERATES A VARCHAR REPRESENTATION OF THE TWO BOUNDS OF A PERIOD(TIMESTAMP) VALUE, THIS VERSION ALLOWS TO DEFINE HOW MANY PRECISION DIGITS ARE
+-- DESIRED IN THE RESULT (UP TO 9, HOWEVER, PLEASE KEEP IN MIND TERADATA MAXIMUM PRECISION FOR TIMESTAMPS IS 6)
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIMESTAMP_NTZ, D2 TIMESTAMP_NTZ, PRECISIONDIGITS INT)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 CASE WHEN PRECISIONDIGITS <= 0 THEN
@@ -180,11 +153,12 @@ END
 $$;
 
 -- =============================================
--- Description: Generates a varchar representation of the two bounds of a period(time) value, this version allows to define how many precision digits are
--- desired in the result (up to 9, however, please keep in mind Teradata maximum precision for time is 6)
+-- DESCRIPTION: GENERATES A VARCHAR REPRESENTATION OF THE TWO BOUNDS OF A PERIOD(TIME) VALUE, THIS VERSION ALLOWS TO DEFINE HOW MANY PRECISION DIGITS ARE
+-- DESIRED IN THE RESULT (UP TO 9, HOWEVER, PLEASE KEEP IN MIND TERADATA MAXIMUM PRECISION FOR TIME IS 6)
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIME, D2 TIME, PRECISIONDIGITS INT)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 CASE WHEN PRECISIONDIGITS <= 0 THEN
@@ -197,34 +171,37 @@ END
 $$;
 
 -- =============================================
--- Description: Emulates the Teradata Period Value Constructor Function overload with a single timestamp parameter, in the original behavior Teradata adds one
--- to the smallest time part of the timestamp (up to microseconds at precision 6) but Snowflake timestamps default to precision 9 (nanoseconds), a microsecond is
--- added to match Teradata's maximum precision for timestamps so results might differ at lower precisions
+-- DESCRIPTION: EMULATES THE TERADATA PERIOD VALUE CONSTRUCTOR FUNCTION OVERLOAD WITH A SINGLE TIMESTAMP PARAMETER, IN THE ORIGINAL BEHAVIOR TERADATA ADDS ONE
+-- TO THE SMALLEST TIME PART OF THE TIMESTAMP (UP TO MICROSECONDS AT PRECISION 6) BUT SNOWFLAKE TIMESTAMPS DEFAULT TO PRECISION 9 (NANOSECONDS), A MICROSECOND IS
+-- ADDED TO MATCH TERADATA'S MAXIMUM PRECISION FOR TIMESTAMPS SO RESULTS MIGHT DIFFER AT LOWER PRECISIONS
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIMESTAMP_NTZ)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(DATEADD(MICROSECOND, 1, D1))
 $$;
 
 -- =============================================
--- Description: Emulates the Teradata Period Value Constructor Function overload with a single date parameter
+-- DESCRIPTION: EMULATES THE TERADATA PERIOD VALUE CONSTRUCTOR FUNCTION OVERLOAD WITH A SINGLE DATE PARAMETER
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 DATE)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(DATEADD(DAY, 1, D1))
 $$;
 
 -- =============================================
--- Description: Emulates the Teradata Period Value Constructor Function overload with a single time parameter, in the original behavior Teradata adds one
--- to the smallest time part of the time type (up to microseconds at precision 6) but Snowflake time type defaults to precision 9 (nanoseconds), a microsecond is
--- added to match Teradata's maximum precision for time so results might differ at lower precisions
+-- DESCRIPTION: EMULATES THE TERADATA PERIOD VALUE CONSTRUCTOR FUNCTION OVERLOAD WITH A SINGLE TIME PARAMETER, IN THE ORIGINAL BEHAVIOR TERADATA ADDS ONE
+-- TO THE SMALLEST TIME PART OF THE TIME TYPE (UP TO MICROSECONDS AT PRECISION 6) BUT SNOWFLAKE TIME TYPE DEFAULTS TO PRECISION 9 (NANOSECONDS), A MICROSECOND IS
+-- ADDED TO MATCH TERADATA'S MAXIMUM PRECISION FOR TIME SO RESULTS MIGHT DIFFER AT LOWER PRECISIONS
 -- =============================================
 CREATE OR REPLACE FUNCTION PUBLIC.PERIOD_UDF(D1 TIME)
 RETURNS STRING
+IMMUTABLE
 AS
 $$
 TO_VARCHAR(D1) || '*' || TO_VARCHAR(DATEADD(MICROSECOND, 1, D1))

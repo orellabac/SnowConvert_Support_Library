@@ -1,4 +1,4 @@
-﻿-- <copyright file="HEX_UDF.cs" company="Mobilize.Net">
+-- <copyright file="MONTHS_BETWEEN_UDF.sql" company="Mobilize.Net">
 --        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
 -- 
 --        This file is part of the Mobilize Frameworks, which is
@@ -15,12 +15,20 @@
 -- </copyright>
 
 -- =============================================
--- Description: UDF for Teradata CHAR2HEXINT function
+-- DESCRIPTION: UDF THAT REPRODUCES MONTHS_BETWEEN FUNCTIONALITY
+-- PARAMETERS: MONTHS_BETWEEN
+-- FIRST_DATE: TIMESTAMP_LTZ
+-- SECOND_DATE: TIMESTAMP_LTZ
+-- RETURNS: NUMBER OF MONTHS BETWEEN FIRST_DATE AND SECOND_DATE
+-- EXAMPLE:
+--  SELECT MONTHS_BETWEEN_UDF('2022-02-14', '2021-02-14'); -- SELECT MONTHS_BETWEEN(TO_DATE('2022-02-14','YYYY-MM-DD'), TO_DATE('2021-02-14','YYYY-MM-DD')) FROM DUAL;
+--  RETURNS 12
 -- =============================================
-CREATE OR REPLACE FUNCTION PUBLIC.CHAR2HEXINT_UDF (IN_STR VARCHAR)
-  RETURNS VARCHAR
-  LANGUAGE JAVASCRIPT
-AS $$
-  return IN_STR.split('').map( e => "00" + e.charCodeAt(0).toString(16) ).join('');
+CREATE OR REPLACE FUNCTION MONTHS_BETWEEN_UDF(FIRST_DATE TIMESTAMP_LTZ, SECOND_DATE TIMESTAMP_LTZ)
+RETURNS NUMBER(20,6)
+IMMUTABLE
+AS
+$$
+MONTHS_BETWEEN(FIRST_DATE, SECOND_DATE)
 $$
 ;

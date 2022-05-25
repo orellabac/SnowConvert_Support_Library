@@ -1,21 +1,24 @@
-import argparse
+# remove_compress_py2.py
+# This script supports python 2.x and will remove the COMPRESS clause from the Teradata table DDL.
+
+import optparse
 import re
 import os
 
 import io
 import string
 
+print("Teradata Compress statements are not needed in Snowflake. This script removed any matching COMPRESS expression from the original file.")
 
+options = optparse.OptionParser()
+options.add_option('-i','--input', help='Input DDL to check for DDL statements', dest='input')
+options.add_option('-o','--output', help='modified file', dest='output')
 
-arguments = argparse.ArgumentParser(description="Teradata Compress statements are not needed in Snowflake. This script removed any matching COMPRESS expression from the original file.")
-arguments.add_argument("--input", required=True, help="Input DDL to check for DDL statements")
-arguments.add_argument("--output", required=True, help="modified file")
-
-arguments = arguments.parse_args()
+(arguments, other_input) = options.parse_args()
 
 if not os.path.exists(arguments.input):
-    print(f"Error: Input file [{arguments.input}] could not be found")
-    exit(100)
+     print("Error: Input file [" + arguments.input +"] could not be found")
+     exit(100)
 
 # open and read file. try some encondings in case it fails
 try:
@@ -38,8 +41,8 @@ def eat_number(str):
     global i
     after_first_number = False
     decimal_points_count = 0
-    while str[i].isnumeric() or (after_first_number and decimal_points_count == 0 and str[i]=='.'):
-        if str[i].isnumeric():
+    while str[i].isdigit() or (after_first_number and decimal_points_count == 0 and str[i]=='.'):
+        if str[i].isdigit():
             after_first_number = True
         if str[i]=='.':
             decimal_points_count = decimal_points_count + 1
@@ -70,7 +73,7 @@ def eat_until_closing_parenthesis(str):
         if str[i] == "'":
             classified=True
             eat_string(str)
-        if str[i].isnumeric():
+        if str[i].isdigit():
             classified=True
             eat_number(str)
         if str[i].isspace():
@@ -101,9 +104,8 @@ def eat_compress(str):
         if str[i]=="'":
             eat_string(str)
         # remove fragments like: COMPRESS 100
-        if str[i].isnumeric():
+        if str[i].isdigit():
             eat_number(str)
-
 
 def process_file(file_contents):
     global i
@@ -111,7 +113,7 @@ def process_file(file_contents):
     with open(arguments.output,"w",buffering=10000) as f:
         while i < max:
             if i % 100 == 0:
-                print(f"Processing offset at {i}\r",end="")
+                print("Processing offset at " + str(i) + "\r")#,end="")
             if    (i + 8 < max) and file_contents[i  ]=='C' and file_contents[i+1]=='O' and file_contents[i+2]=='M' \
             and file_contents[i+3]=='P' and file_contents[i+4]=='R' \
             and file_contents[i+5]=='E' and file_contents[i+6]=='S' and file_contents[i+7]=='S' \
@@ -123,12 +125,9 @@ def process_file(file_contents):
                         i = i + 1
                     eat_compress(file_contents)
             else:
-                #result = result + file_contents[i]
                 f.write(file_contents[i])
                 i = i + 1
 
-
 process_file(file_contents)
-
     
 print("\n\nDone!")

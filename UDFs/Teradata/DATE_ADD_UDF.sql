@@ -1,4 +1,4 @@
--- <copyright file="SUBSTR_TD_UDF.cs" company="Mobilize.Net">
+﻿-- <copyright file="DATE_ADD_UDF.sql" company="Mobilize.Net">
 --        Copyright (C) Mobilize.Net info@mobilize.net - All Rights Reserved
 -- 
 --        This file is part of the Mobilize Frameworks, which is
@@ -15,34 +15,21 @@
 -- </copyright>
 
 -- =============================================
--- Description: UDF for Teradata SUBSTR function
+-- DESCRIPTION: UDF THAT ALLOWS THE ADDITION OF 2 DIFFERENT DATES
+-- EQUIVALENT: TERADATA DATE + DATE
+-- PARAMETERS:
+-- FIRST_DATE: DATE
+-- SECOND_DATE: DATE
+-- RETURNS: A DATE RESULTING FROM THE ADDITION OF FIRST_DATE AND SECOND_DATE
+-- EXAMPLE:
+--  SELECT DATE_ADD_UDF('2022-02-14','2022-02-14');
+--  RETURNS '4044-04-28'
 -- =============================================
-CREATE OR REPLACE FUNCTION PUBLIC.SUBSTR_TD_UDF(base_exp string, startpos float, length float)
-  RETURNS string
-  LANGUAGE JAVASCRIPT
+CREATE OR REPLACE FUNCTION PUBLIC.DATE_ADD_UDF(FIRST_DATE DATE, SECOND_DATE DATE)
+RETURNS DATE
+IMMUTABLE
 AS
 $$
-  if ( STARTPOS > 0 ) {
-      return BASE_EXP.substr(STARTPOS -1, LENGTH   );
-  } else if (STARTPOS == 0 ) {
-      return BASE_EXP.substr(STARTPOS , LENGTH  - 1 );
-  } else {
-      return BASE_EXP.substr(0, LENGTH + STARTPOS  -  1 );
-  }
- 
+ DATEADD(YEAR, YEAR(SECOND_DATE), DATEADD(MONTH, MONTH(SECOND_DATE), DATEADD(DAY, DAY(SECOND_DATE), FIRST_DATE)))
 $$
 ;
-
-CREATE OR REPLACE FUNCTION PUBLIC.SUBSTR_TD_UDF(base_exp string, startpos float )
-  RETURNS string
-  LANGUAGE JAVASCRIPT
-AS
-$$
-  if ( STARTPOS > 0 ) {
-      return BASE_EXP.substr(STARTPOS -1   );
-  }  else {
-      return BASE_EXP.substr( 0  );
-  }
- 
-$$
-;  
