@@ -250,6 +250,9 @@ def init(input_directory, workspace, split, splitpattern, object_type):
                         f = open(full_path)
                         # queuing a tuple (path, contents, errors)
                         contents = f.read()
+                        # remove BOM
+                        if contents[0] == '\ufeff':
+                            contents = contents[1:]
                         if split:
                             print(f"Processing file {full_path} ",end="")
                             # we need to remove empty comments because they can cause problems when splitting
@@ -570,20 +573,32 @@ if __name__ == "__main__":
         ini_path = os.path.expanduser("~/.snowsql/config")
         if not os.path.exists(ini_path):
             print(f"ERROR: Ini at {ini_path} was not found")
+    # First initialize all vars
+    sf_password      = args.Password     
+    sf_account       = args.Account      
+    sf_warehouse     = args.Warehouse    
+    sf_role          = args.Role         
+    sf_db            = args.Database     
+    sf_schema        = args.Schema       
+    sf_authenticator = args.authenticator
+
+
+
     # if an ini file was found read some settings from there
     # we avoid reading user and password from this file
+    connectionSettingsSection = None
     if ini_path and config.read(ini_path):
         connectionSettingsSection = "connections"
         if args.ActiveConn:
             if args.ActiveConn != "default":
                 connectionSettingsSection = "connections." + args.ActiveConn
-    sf_password      = args.Password       or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
-    sf_account       = args.Account        or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
-    sf_warehouse     = args.Warehouse      or (config[connectionSettingsSection]['warehousename'] if 'warehousename' in config[connectionSettingsSection] else None)
-    sf_role          = args.Role           or (config[connectionSettingsSection]['rolename']      if 'rolename'      in config[connectionSettingsSection] else None)
-    sf_db            = args.Database       or (config[connectionSettingsSection]['dbname']        if 'dbname'        in config[connectionSettingsSection] else None)
-    sf_schema        = args.Schema         or (config[connectionSettingsSection]['schemaname']    if 'schemaname'    in config[connectionSettingsSection] else None)
-    sf_authenticator = args.authenticator  or (config[connectionSettingsSection]['authenticator'] if 'authenticator' in config[connectionSettingsSection] else None)
+        sf_password      = args.Password       or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
+        sf_account       = args.Account        or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
+        sf_warehouse     = args.Warehouse      or (config[connectionSettingsSection]['warehousename'] if 'warehousename' in config[connectionSettingsSection] else None)
+        sf_role          = args.Role           or (config[connectionSettingsSection]['rolename']      if 'rolename'      in config[connectionSettingsSection] else None)
+        sf_db            = args.Database       or (config[connectionSettingsSection]['dbname']        if 'dbname'        in config[connectionSettingsSection] else None)
+        sf_schema        = args.Schema         or (config[connectionSettingsSection]['schemaname']    if 'schemaname'    in config[connectionSettingsSection] else None)
+        sf_authenticator = args.authenticator  or (config[connectionSettingsSection]['authenticator'] if 'authenticator' in config[connectionSettingsSection] else None)
 
     # If some settings are still pending try the arguments or environment variables
     sf_account      = args.Account or sf_account or os.getenv("SNOW_ACCOUNT") or os.getenv("SNOWSQL_ACCOUNT")
