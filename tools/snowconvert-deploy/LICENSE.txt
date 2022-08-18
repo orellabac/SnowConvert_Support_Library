@@ -1,4 +1,4 @@
-Mobilize.NET Teradata DDL Exporter
+Mobilize.NET Snowflake Deploy Tool
 
 Copyright (c) Mobilize.NET
 All rights reserved. 

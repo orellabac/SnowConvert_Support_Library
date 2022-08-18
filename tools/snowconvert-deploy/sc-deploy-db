@@ -3,7 +3,6 @@
 # pylint: disable=line-too-long
 """
 Created on Tue May 12 15:23:49 2020
-
 @author: afeher, mrojas, jwelsh
 """
 
@@ -23,6 +22,8 @@ from collections import Counter
 import glob
 import shutil
 import snowflake.connector
+
+DEPLOY_VERSION = '0.0.15'
 
 category_queries = {
     "table"            : "select TABLE_CATALOG     AS DB,TABLE_SCHEMA     AS SCHEMA,TABLE_NAME     AS NAME from information_schema.tables where TABLE_SCHEMA <> 'INFORMATION_SCHEMA' AND TABLE_TYPE='BASE TABLE'",
@@ -118,7 +119,7 @@ def sync_db(conn, input_dir, target_dir,category_arg):
     print("Sync DB process completed")
 
 
-def thread_function(con, index, max_stmnt, stmnt_q, created_q, failed_q, done_q):
+def thread_function(con, index, max_stmnt, stmnt_q, created_q, failed_q, done_q, progress=None, task=None):
     cur = con.cursor()
     ebuf = []
     cur.execute("set quoted_identifiers_ignore_case = TRUE")
@@ -127,6 +128,8 @@ def thread_function(con, index, max_stmnt, stmnt_q, created_q, failed_q, done_q)
         if (stmnt_q.qsize() > 0) and ((created_q.qsize() + failed_q.qsize()) < max_stmnt):
             (file,stmnt) = stmnt_q.get()
             try:
+                if progress:
+                    progress.update(task,advance=1)
                 cur.execute(stmnt)
                 created_q.put({"stmnt":stmnt,"file":file})
             except snowflake.connector.errors.ProgrammingError as e_stmt:
@@ -140,7 +143,7 @@ def thread_function(con, index, max_stmnt, stmnt_q, created_q, failed_q, done_q)
 
 
 def msg_thread_function(parallelism, msg_freq, session_id, no_of_stmnts,
-created_q, failed_q, done_q):
+created_q, failed_q, done_q, progress=None, task=None):
     run_dict = {
                 "start_time": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
                 "session_id": session_id,
@@ -156,14 +159,15 @@ created_q, failed_q, done_q):
     print("Parallelism: ", '{:5d}'.format(parallelism))
     print("# of stmts : ", '{:5d}'.format(run_dict["number_of_statements"]))
     print("Created.   : ", '{:5d}'.format(c), " Failed In Run:", '{:5d}'.format(f), end = "\r", flush = True)
-    if msg_freq:
+    if not progress and msg_freq:
         time.sleep(msg_freq)
     while done_q.qsize() < parallelism:
         c = created_q.qsize()
         f = failed_q.qsize()
-        print("Created.   : ", '{:5d}'.format(c), " Failed In Run:", '{:5d}'.format(f), end = "\r", flush = True)
-        if msg_freq:
-            time.sleep(msg_freq)
+        if not progress:
+            print("Created.   : ", '{:5d}'.format(c), " Failed In Run:", '{:5d}'.format(f), end = "\r", flush = True)
+            if msg_freq:
+                time.sleep(msg_freq)
 
     #time.sleep(2)
     run_dict["number_of_created"] = created_q.qsize()
@@ -201,6 +205,14 @@ def remove_error_msg(msg):
         ret = ret[0:k] + ret[k+1:]
     return ret
 
+def remove_bom(contents):
+    """
+SnowSQL does not like BOM so we need to remove them
+    """
+    # remove BOM
+    if contents and len(contents) and contents[0] == '\ufeff':
+        contents = contents[1:]
+    return contents
 
 
 def init(input_directory, workspace, split, splitpattern, object_type):
@@ -250,9 +262,7 @@ def init(input_directory, workspace, split, splitpattern, object_type):
                         f = open(full_path)
                         # queuing a tuple (path, contents, errors)
                         contents = f.read()
-                        # remove BOM
-                        if contents[0] == '\ufeff':
-                            contents = contents[1:]
+                        contents = remove_bom(contents)
                         if split:
                             print(f"Processing file {full_path} ",end="")
                             # we need to remove empty comments because they can cause problems when splitting
@@ -319,7 +329,7 @@ def decode_error(argument):
     return switcher.get(argument, "nothing")
 
 def open_connection() -> snowflake.connector.SnowflakeConnection:
-    print(f"Connecting account:{sf_account} database: {sf_db} role: {sf_role} warehouse: {sf_warehouse} user: {sf_user} auth: {sf_authenticator}")
+    log_message(f"Connecting account: [conninfo]{sf_account}[/conninfo] database: [conninfo]{sf_db}[/conninfo] role: [conninfo]{sf_role}[/conninfo] warehouse: [conninfo]{sf_warehouse}[/conninfo] user: [conninfo]{sf_user}[/conninfo] auth: [conninfo]{sf_authenticator}[/conninfo]")
     try:
         if sf_authenticator:
             conn = snowflake.connector.connect (
@@ -344,11 +354,13 @@ def open_connection() -> snowflake.connector.SnowflakeConnection:
                 application = "mobilize.net")
         return conn
     except Exception as e_connection:
-        print("Aborting!!. Error opening connection")
-        print(e_connection)
+        log_message("[danger]Aborting!![/danger]. Error opening connection")
+        log_message(e_connection)
         exit(1)
 
 def main(con,input_script, workspace, split, splitpattern, object_type):
+    # delete old logs
+    shutil.rmtree(out_path,ignore_errors=True)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     global parallelism
@@ -365,44 +377,80 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
     no_of_stmnts_cur_run = no_of_stmnts
 
     run_num = 1
-
-    while True:
-        print("\n")
-        print("Recursive Run", run_num, "...")
-        parallelism_val = calc_par(no_of_stmnts_cur_run, parallelism)
-        threads = list()
-        for index in range(parallelism_val):
-            x = threading.Thread(target=thread_function, args=(con, index, max_stmnt, stmnt_q_cur_run, created_q, failed_q, done_q, ))
+    if args.simple_output:
+        while True:
+            print("\n")
+            print("Recursive Run", run_num, "...")
+            parallelism_val = calc_par(no_of_stmnts_cur_run, parallelism)
+            threads = list()
+            for index in range(parallelism_val):
+                x = threading.Thread(target=thread_function, args=(con, index, max_stmnt, stmnt_q_cur_run, created_q, failed_q, done_q))
+                threads.append(x)
+                x.start()
+            x = threading.Thread(target=msg_thread_function, args=(parallelism_val, msg_freq, con.session_id, no_of_stmnts_cur_run, created_q, failed_q, done_q, ))
             threads.append(x)
             x.start()
-        x = threading.Thread(target=msg_thread_function, args=(parallelism_val, msg_freq, con.session_id, no_of_stmnts_cur_run, created_q, failed_q, done_q, ))
-        threads.append(x)
-        x.start()
-        for index, thread in enumerate(threads):
-            thread.join()
-        if failed_q.qsize() == 0:
-            print("All objects successfully created.")
-            con.close()
-            break
-        if created_q.qsize() == tot_created_last_run_end:
-            print("No new objects created in previous run. Ending recursive runs.")
-            con.close()
-            break
-        tot_created_last_run_end = created_q.qsize()
-        stmnt_q_cur_run = queue.Queue()
-        for stmnt in list(failed_q.queue):
-            y = remove_error_msg(stmnt["statement"])
-            stmnt_q_cur_run.put((stmnt["file"],y))
+            for index, thread in enumerate(threads):
+                thread.join()
+            if failed_q.qsize() == 0:
+                log_message("All objects successfully created.")
+                con.close()
+                break
+            if created_q.qsize() == tot_created_last_run_end:
+                log_message("\nNo new objects created in previous run. Ending recursive runs.")
+                con.close()
+                break
+            tot_created_last_run_end = created_q.qsize()
+            stmnt_q_cur_run = queue.Queue()
+            for stmnt in list(failed_q.queue):
+                y = remove_error_msg(stmnt["statement"])
+                stmnt_q_cur_run.put((stmnt["file"],y))
 
-        no_of_stmnts_cur_run = failed_q.qsize()
-        failed_q = queue.Queue()
-        run_num = run_num + 1
+            no_of_stmnts_cur_run = failed_q.qsize()
+            failed_q = queue.Queue()
+            run_num = run_num + 1
+    else:
+        from rich.progress import Progress
+        with Progress() as progress:
+            while True:
+                task = progress.add_task(f"Run [green]{run_num}...", total=no_of_stmnts_cur_run)
+                parallelism_val = calc_par(no_of_stmnts_cur_run, parallelism)
+                threads = list()
+                for index in range(parallelism_val):
+                    x = threading.Thread(target=thread_function, args=(con, index, max_stmnt, stmnt_q_cur_run, created_q, failed_q, done_q, progress, task))
+                    threads.append(x)
+                    x.start()
+                x = threading.Thread(target=msg_thread_function, args=(parallelism_val, msg_freq, con.session_id, no_of_stmnts_cur_run, created_q, failed_q, done_q,progress, task ))
+                threads.append(x)
+                x.start()
+                for index, thread in enumerate(threads):
+                    thread.join()
+                if progress:
+                    progress.update(task,completed=no_of_stmnts_cur_run)
+                    progress.update(task,visible=False)
+                if failed_q.qsize() == 0:
+                    log_message("All objects successfully created.")
+                    con.close()
+                    break
+                if created_q.qsize() == tot_created_last_run_end:
+                    log_message("\nNo new objects created in previous run. Ending recursive runs.")
+                    con.close()
+                    break
+                tot_created_last_run_end = created_q.qsize()
+                stmnt_q_cur_run = queue.Queue()
+                for stmnt in list(failed_q.queue):
+                    y = remove_error_msg(stmnt["statement"])
+                    stmnt_q_cur_run.put((stmnt["file"],y))
+
+                no_of_stmnts_cur_run = failed_q.qsize()
+                failed_q = queue.Queue()
+                run_num = run_num + 1
 
     print("Creating output files...")
     for info in list(done_q.queue):
         if isinstance(info,dict):
             for item, val in info.items():  # dct.iteritems() in Python 2
-                print("{} : {}".format(item.ljust(20), val))
+                log_message("{} : {}".format(item.ljust(20), val))
     execution_summary = 1
     # Sometimes there is an int
     while isinstance(execution_summary, int):
@@ -502,8 +550,8 @@ def str2bool(v):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="""
-    SnowConvertStudio Deployment Script
+    parser = argparse.ArgumentParser(add_help=False,description=f"""
+    SnowConvertStudio Deployment Script v{DEPLOY_VERSION}
     ===================================
 
     This script helps you to deploy a collection of .sql files to a Snowflake Account.
@@ -523,9 +571,11 @@ if __name__ == "__main__":
     parser.add_argument("-R"            ,"--Role",     dest="Role",      help = "Snowflake Role")
     parser.add_argument("-U"            ,"--User",     dest="User",      help = "Snowflake User")
     parser.add_argument("-P"            ,"--Password", dest="Password",  help = "Password")
+    parser.add_argument("--AskPassword" ,help = "Forces asking for password",action='store_true')
     parser.add_argument("-W"            ,"--Workspace",dest="Workspace", help = "Path for workspace root. Defaults to current dir", default=os.getcwd())
     parser.add_argument("-I"            ,"--InPath",   dest="InPath",required=True,  help = "Path for SQL scripts")
     parser.add_argument("--activeConn",                dest="ActiveConn",required=False,  help = "When given, it will be used to select connection parameters from ~/.snowsql/config or config_snowsql.ini")
+    parser.add_argument("--token",required=False,help="Token for oauth authentication",default=None)
     parser.add_argument("--authenticator",             dest="authenticator", help = "Use the authenticator with you want to use a different authentication mechanism")
     parser.add_argument("-L","--LogPath",              dest="LogPath",   help = "Path for process logs. Defaults to current dir",default=os.path.join(os.getcwd(),"logs"))
     parser.add_argument("--SplitBefore", help = "Regular expression that can be used to split code in fragments starting **BEFORE** the matching expression")
@@ -534,16 +584,45 @@ if __name__ == "__main__":
     parser.add_argument("--sync-folder",required=False, help = "Syncronizes a work folder with a target folder")
     parser.add_argument("--sync-folder-target",required=False,  help = "Target folder where the lastest version of the scripts is kept")
     parser.add_argument("--sync-folder-categories",required=False,  help = "It is expected that the workdir will organize code in folders like [table,view,function,macro,procedure]. This parameter is a comma separated list of the categories you would like to sync")
-
+    parser.add_argument("--simple-output",required=False,help = "disables the usage of colors and other terminal effects")  
 
     args = parser.parse_args()
+    TAG = re.compile(r"\[\w+\]")
+
+    if not args.simple_output:
+        from rich.console import Console
+        from rich.theme import Theme
+        custom_theme = Theme({
+            "conninfo": "green",
+            "info": "dim cyan",
+            "warning": "magenta",
+            "danger": "bold red"
+        })
+        console = Console(theme=custom_theme)
+    """
+    function to log information
+    """
+    def log_message(rich_message):
+        if args.simple_output:
+            simple_message = re.sub(TAG,'',rich_message)
+            print(simple_message)
+        else:
+            try:
+                console.print(rich_message)    
+            except:
+                simple_message = re.sub(TAG,'',rich_message)
+                print(simple_message)
+
 
     if args.InPath and path.exists(args.InPath):
         input_script = args.InPath
-        print(f"Using InputPath = {input_script}")
+        log_message(f"Using InputPath = [cyan]{input_script}")
     else:
-        print("Input Path for SQL scripts does not exist.")
+        log_message(f"Input Path for SQL scripts does not exist: [red]{args.InPath}")
         sys.exit(0)
+
+
+
 
     config = configparser.ConfigParser()
 # pylint: disable-msg=C0103
@@ -572,7 +651,7 @@ if __name__ == "__main__":
     if not ini_path:
         ini_path = os.path.expanduser("~/.snowsql/config")
         if not os.path.exists(ini_path):
-            print(f"ERROR: Ini at {ini_path} was not found")
+            log_message(f"[danger]ERROR:[/danger] Ini at [red]{ini_path} was not found")
     # First initialize all vars
     sf_password      = args.Password     
     sf_account       = args.Account      
@@ -587,18 +666,21 @@ if __name__ == "__main__":
     # if an ini file was found read some settings from there
     # we avoid reading user and password from this file
     connectionSettingsSection = None
-    if ini_path and config.read(ini_path):
-        connectionSettingsSection = "connections"
-        if args.ActiveConn:
-            if args.ActiveConn != "default":
-                connectionSettingsSection = "connections." + args.ActiveConn
-        sf_password      = args.Password       or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
-        sf_account       = args.Account        or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
-        sf_warehouse     = args.Warehouse      or (config[connectionSettingsSection]['warehousename'] if 'warehousename' in config[connectionSettingsSection] else None)
-        sf_role          = args.Role           or (config[connectionSettingsSection]['rolename']      if 'rolename'      in config[connectionSettingsSection] else None)
-        sf_db            = args.Database       or (config[connectionSettingsSection]['dbname']        if 'dbname'        in config[connectionSettingsSection] else None)
-        sf_schema        = args.Schema         or (config[connectionSettingsSection]['schemaname']    if 'schemaname'    in config[connectionSettingsSection] else None)
-        sf_authenticator = args.authenticator  or (config[connectionSettingsSection]['authenticator'] if 'authenticator' in config[connectionSettingsSection] else None)
+    try:
+        if ini_path and config.read(ini_path):
+            connectionSettingsSection = "connections"
+            if args.ActiveConn:
+                if args.ActiveConn != "default":
+                    connectionSettingsSection = "connections." + args.ActiveConn
+            sf_password      = args.Password       or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
+            sf_account       = args.Account        or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
+            sf_warehouse     = args.Warehouse      or (config[connectionSettingsSection]['warehousename'] if 'warehousename' in config[connectionSettingsSection] else None)
+            sf_role          = args.Role           or (config[connectionSettingsSection]['rolename']      if 'rolename'      in config[connectionSettingsSection] else None)
+            sf_db            = args.Database       or (config[connectionSettingsSection]['dbname']        if 'dbname'        in config[connectionSettingsSection] else None)
+            sf_schema        = args.Schema         or (config[connectionSettingsSection]['schemaname']    if 'schemaname'    in config[connectionSettingsSection] else None)
+            sf_authenticator = args.authenticator  or (config[connectionSettingsSection]['authenticator'] if 'authenticator' in config[connectionSettingsSection] else None)
+    except Exception as e:
+        log_message(f"Could not read [warning] {ini_path} [\warning] [cyan] {e}")
 
     # If some settings are still pending try the arguments or environment variables
     sf_account      = args.Account or sf_account or os.getenv("SNOW_ACCOUNT") or os.getenv("SNOWSQL_ACCOUNT")
@@ -619,7 +701,7 @@ if __name__ == "__main__":
     else:
         if args.SplitAfter:
             split = 2
-    if not sf_password and not sf_authenticator and not args.ActiveConn:
+    if args.AskPassword:
         from getpass import getpass
         sf_password = getpass()
     con = open_connection()

@@ -2,22 +2,32 @@ sc-deploy-db
 ===============
 
 `sc-deploy-db` is a cross-platform command line tool for deploying scripts to Snowflake. 
-For large data warehouses, it makes it easy when you have folders with a lot of source files
-and you need a quick solution to deploy them to your Snowflake Warehouse.
+This tool is designed to help with the deployment of large data warehouses.  
 
-`sc-deploy-db` will also handle dependendencies between objects. This tool uses a brute-force
-approach. If an object fails due to a missing dependendency it will put on a queue and it will retried.
-The tool will keep trying to deploy until it gets to a run where no more objects can be deployed.
+A typical challenge when deploying code to snowflake is handling dependendencies. For example if you have a
+view and it depends on some other views, then your deployment will fail if you do not deploy 
+the dependendencies first.
 
-It then makes it very handy on large warehouses because you can just point it to your code and just
-let it do the deployment.
+`sc-deploy-db` can handle dependendencies between objects. The tool uses a brute-force
+approach in which if an object fails due to a missing dependendency it will put it a queue 
+and then the deployment of that object it will retried.
+The tool will keep trying to deploy until it gets to point where no more objects can be deployed.
 
-The tool will also provide useful logs that will help you to identify and track any deployment issues.
-For projects using `SnowConvert`_.
+The tool will also provide deployment logs that will help you to identify and track any deployment issues.
 
+For projects using `SnowConvert`_ this deploy tool is highly recommended.
+
+Also a lot of tools have limitations when deploying files that contain several code snippets. A typical error you might get is::
+
+    000006 (0A000): Multiple SQL statements in a single API call are not supported; use one API call per statement instead.  
+
+This tool has some options that can process the code inside the files, splitting it based on pattern before deployment helping 
+in those situations. Please read more about it the following sections.
 
 Installation
 ------------
+
+We recommended installing using `PYPI`_
 
 .. code:: bash
 
@@ -25,7 +35,9 @@ Installation
     
 .. note:: If you run this command on MacOS change `pip` by `pip3`
 
-You might need to install the python connector for snowflake: `pip install "snowflake-connector-python[pandas]"`
+You might need to install the python connector for snowflake::
+
+    pip install "snowflake-connector-python[pandas]"
 
 
 
@@ -37,12 +49,16 @@ For information about the different parameters or options just run it using the 
 .. code:: bash
 
     $ sc-deploy-db -h
+    
+Tool Options
+------------
 
 .. code:: bash
 
-    usage: sc-deploy-db [-h] [-A ACCOUNT] [-D DATABASE] [-WH WAREHOUSE] [-R ROLE] [-U USER] [-P PASSWORD] [-W WORKSPACE] -I INPATH
+    usage: sc-deploy-db [-h] [-A ACCOUNT] [-D DATABASE] [-WH WAREHOUSE] [-R ROLE] [-U USER] [-P PASSWORD] [--AskPassword] [-W WORKSPACE] -I INPATH
                     [--activeConn ACTIVECONN] [--authenticator AUTHENTICATOR] [-L LOGPATH] [--SplitBefore SPLITBEFORE] [--SplitAfter SPLITAFTER]
                     [--ObjectType [OBJECTTYPE]]
+
     SnowConvertStudio Deployment Script
     ===================================
     This script helps you to deploy a collection of .sql files to a Snowflake Account.
@@ -51,9 +67,11 @@ For information about the different parameters or options just run it using the 
     - Snowflake Warehouse
     - Snowflake Role
     - Snowflake Database
-    If the tool can find a config_snowsql.ini file in the current directory or in the workspace\config_snowsql.ini location
+
+    If the tool can find a **config_snowsql.ini** file in the current directory or in the **workspace\config_snowsql.ini** location
     it will read those parameters from there.
     optional arguments:
+
     -h, --help            show this help message and exit
     -A ACCOUNT, --Account ACCOUNT
                           Snowflake Account
@@ -67,6 +85,7 @@ For information about the different parameters or options just run it using the 
     -U USER, --User USER  Snowflake User
     -P PASSWORD, --Password PASSWORD
                           Password
+    --AskPassword         If given the tool will prompt for the password
     -W WORKSPACE, --Workspace WORKSPACE
                           Path for workspace root. Defaults to current dir
     -I INPATH, --InPath INPATH
@@ -91,12 +110,13 @@ For information about the different parameters or options just run it using the 
 
 This tool assumes :
 
-- that you have a collection of `.sql` files under a directory. It will then execute all those `.sql` files connecting to the specified database.
-- that each file contains **only** one statement.
+- that you have a collection of `.sql` files under a directory. 
+- that all those `.sql` files will be deployed to the same database.
+- that each file contains **only** one statement. If your files contain more that one statement then you should use the **--SplitBefore** or **--SplitAfter** options.
 
-The tool can also read its values from environment variables. 
+The tool can also read the connection settings from environment variables. 
 
-The following environment variables are recognized by this tool (the tool also recognizes `Snowsql Environment Variables`_):
+The following environment variables are recognized by this tool (notice that the tool also recognizes `SNOWSQL CLI Environment Variables`_):
 
 .. list-table:: Environmental Variables
    :widths: 25 50
@@ -117,19 +137,17 @@ The following environment variables are recognized by this tool (the tool also r
    * - SNOW_DATABASE or SNOW_DATABASE
      - The database to use when running the sql
 
-If you are a `Snowsql`_ user, this tool can use you configuration settings, using the 
-`--activeConn connectionName` parameter will search for the `[connections.connectionName]`
+If you are a `SNOWSQL CLI`_ user, this tool can use you configuration settings, using the 
+**--activeConn connectionName** parameter will search for the **[connections.connectionName]**
 section in your config file.
 
 
-.. note::  If your files contains several statements you can use the SplitPattern argument, as explained below, so the tool will try to split the statements prior to execution.
+.. note::  If your files contains several statements you can use the --SplitBefore or --SplitAfter argument, as explained below, so the tool will try to split the statements prior to execution.
 
 Examples
 --------
 
-If you have a folder structure like:
-
-::
+We recommend to have a folder structure like:::
 
     + code
        + procs
@@ -139,22 +157,16 @@ If you have a folder structure like:
          + folder1
              table2.sql
 
-You can deploy then by running:
-
-:: 
+If that is the case you can deploy then by running::: 
 
     sc-deploy-db -A my_sf_account -WH my_wh -U user -P password -I code
 
-If you want to use another authentication like Azure AD you can do:
-
-::
+If you want to use another authentication like Azure AD you can do:::
 
     sc-deploy-db -A my_sf_account -WH my_wh -U user -I code --authenticator externalbrowser
 
 
-A recommended approach is that you setup a bash shell script, for example `config.sh` with contents like:
-
-::
+A recommended approach is that you setup a bash shell script, for example `config.sh` with contents like:::
 
     export SNOW_ACCOUNT="demo.us-east-1"
     export SNOW_WAREHOUSE="DEMO_WH"
@@ -174,11 +186,15 @@ You can then run the script like: `source config.sh`. After that you can just ru
 Files with multiple statements
 ------------------------------
 
-If your files have multiple statements, it will cause some failures are the snowflake Python API does not allow multiple statements on a single call.
-In order to handle that, you give a tool a this pattern is a regular expression that can be used to split the file contents before
-sending them to the database. This pattern could be used to split before the pattern: `--SplitBefore` or to split after the pattern `--SplitAfter`.
+If your files have multiple statements, it will cause some failures as the snowflake Python API does not allow multiple statements on a single call.::
 
-Let's see some example. 
+    000006 (0A000): Multiple SQL statements in a single API call are not supported; use one API call per statement instead.  
+
+
+In order to handle that, you give a tool a regular expression that can be used to split the file contents. 
+This pattern could be used to split **before** using `--SplitBefore pattern` or to split **after** the pattern `--SplitAfter pattern`.
+
+Let's see some examples. 
 
 If you have a file with contents like:
 
@@ -193,12 +209,13 @@ If you have a file with contents like:
         COL1 VARCHAR
     );
 
-You can use an argument like `--SplitAfter ';'` that will create a fragment from the file anytime a `;` is found.
+You can use an argument like `--SplitAfter ';'` that will create a fragment from the file anytime a `;` is found.::
 
-If you have a file with statements like:
+    sc-deploy-db -A my_sf_account -WH my_wh -U user -P password -I code  --SplitAfter ';'
 
-::
-    
+If you have a file with statements like:::
+
+    /* <sc-table> TABLE2 </sc-table> */
     CREATE TABLE OR REPLACE TABLE1 (
         COL1 VARCHAR
     );
@@ -210,13 +227,26 @@ If you have a file with statements like:
 
 You can use an argument like `--SplitBefore 'CREATE (OR REPLACE)?'`. That will create a fragment each time a `CREATE` or `CREATE OR REPLACE` fragment is found;
 
+::
+
+    sc-deploy-db -A my_sf_account -WH my_wh -U user -P password -I code  --SplitBefore 'CREATE (OR REPLACE)?'
+
+You can also use something like:
+
+::
+
+    sc-deploy-db -A my_sf_account -WH my_wh -U user -P password -I code  --SplitBefore '\/\*[^\*]*\*\/'
+
+To split before a block comment
+
+
 Folder Syncronization
 ---------------------
 
 A very common practice when using `SnowConvert`_ is to organize your files on folders per category [table,view,procedure,macro,function] 
 and per schema. This makes it easier for team collaboration and progress tracking.
 
-Another recommended practice is to have *unstabilized* code on a work directory and then run the `sc-deploy-db`, the tool
+Another recommended practice is to have **unstabilized** code on a work directory and then run the `sc-deploy-db`, the tool
 will generate execution logs with summaries of the found errors.
 
 Data Engineers should work on removing the errors found and re-run the `sc-deploy-db`. 
@@ -224,9 +254,37 @@ Data Engineers should work on removing the errors found and re-run the `sc-deplo
 At some point you might need to sync your progress on another folder. A common practice is that you will have a `Target` folder,
 where you are supposed to have only the files that have been successfully deployed.
 
-To ease that task the deploy tool provides a folder sync command.
+To ease that task the deploy tool provides a folder sync command. This command assumes that you have an structure like:::
 
-For example to syncronize tables and views this command should be executed as: `sc-deploy-db -I WorkDir --sync-folder-target Target --sync-folder-categories "table,view"`
+    - WorkDir
+        - group1
+            -table
+                -schema1
+                   table1.sql
+                   table2.sql
+                -schema2
+                   table3.sql
+                   table4.sql
+            -view
+                -schema1
+                   view1.sql
+                -schema4
+                   view5.sql
+            -function
+                -schema2
+                   function1.sql
+                   function2.sql
+            -procedure
+                -schema1
+                  proc1.sql
+                  proc2.sql
+
+
+For example to syncronize tables and views this command should be executed as: ::
+
+     sc-deploy-db -I WorkDir --sync-folder-target WorkDir/group1 --sync-folder-categories "table,view"
+
+The tool will perform queries agains the **information_schema** tables. It will assume that the file name matches the object name.
 
 Reporting issues and feedback
 -----------------------------
@@ -244,5 +302,6 @@ sc-deploy-db is licensed under the `MIT license`_.
 .. _Issues: https://github.com/MobilizeNet/SnowConvert_Support_Library/issues
 .. _MIT license: https://github.com/MobilizeNet/SnowConvert_Support_Library/tools/snowconvert-deploy/LICENSE.txt
 .. _SnowConvert: https://www.mobilize.net/products/database-migrations/snowconvert
-.. _Snowsql Environment Variables: https://docs.snowflake.com/en/user-guide/snowsql-start.html#connection-syntax
-.. _Snowsql: https://docs.snowflake.com/en/user-guide/snowsql.html
+.. _SNOWSQL CLI Environment Variables: https://docs.snowflake.com/en/user-guide/snowsql-start.html#connection-syntax
+.. _SNOWSQL CLI: https://docs.snowflake.com/en/user-guide/snowsql.html
+.. _PYPI: https://pypi.org/

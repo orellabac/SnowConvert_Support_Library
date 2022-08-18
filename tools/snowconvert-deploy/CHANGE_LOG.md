@@ -43,3 +43,10 @@
 ## Version 0.0.14
 
 - Fixing issue with files in UTF-8 with BOM
+
+## Version 0.0.15
+
+- Adding more  fixes for files in UTF-8 with BOM
+- Adding parameter for force prompt for password
+- Using rich for more colorful output
+- Adding try/catch for ini file parsing issue 
