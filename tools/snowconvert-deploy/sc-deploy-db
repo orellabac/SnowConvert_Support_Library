@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # pylint: disable=line-too-long
 """
@@ -23,7 +23,7 @@ import glob
 import shutil
 import snowflake.connector
 
-DEPLOY_VERSION = '0.0.15'
+DEPLOY_VERSION = '0.0.16'
 
 category_queries = {
     "table"            : "select TABLE_CATALOG     AS DB,TABLE_SCHEMA     AS SCHEMA,TABLE_NAME     AS NAME from information_schema.tables where TABLE_SCHEMA <> 'INFORMATION_SCHEMA' AND TABLE_TYPE='BASE TABLE'",
@@ -144,9 +144,11 @@ def thread_function(con, index, max_stmnt, stmnt_q, created_q, failed_q, done_q,
 
 def msg_thread_function(parallelism, msg_freq, session_id, no_of_stmnts,
 created_q, failed_q, done_q, progress=None, task=None):
+    global total_staments
     run_dict = {
                 "start_time": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
                 "session_id": session_id,
+                # "total_number_of_statements": total_staments,
                 "number_of_statements": no_of_stmnts,
                 "number_of_created": 0,
                 "number_of_failed": 0,
@@ -154,11 +156,15 @@ created_q, failed_q, done_q, progress=None, task=None):
                }
     c = 0
     f = 0
-    print("Start time : ", run_dict["start_time"], "\n")
-    print("Session ID : ", run_dict["session_id"])
-    print("Parallelism: ", '{:5d}'.format(parallelism))
-    print("# of stmts : ", '{:5d}'.format(run_dict["number_of_statements"]))
-    print("Created.   : ", '{:5d}'.format(c), " Failed In Run:", '{:5d}'.format(f), end = "\r", flush = True)
+
+    if not progress:
+        log_message(f'\nstart_time         : {run_dict["start_time"]}')
+        log_message(f'session_id           : {run_dict["session_id"]}')
+        log_message(f'number_of_statements : {parallelism}')
+        log_message(f'number_of_created    : {c}')
+        log_message(f'number_of_failed     : {f}')
+        log_message(f'# of stmts           : {run_dict["number_of_statements"]}')
+        #print(f"Created.   : {c}, Failed In Run: {f}", end = "\r", flush = True)
     if not progress and msg_freq:
         time.sleep(msg_freq)
     while done_q.qsize() < parallelism:
@@ -168,15 +174,24 @@ created_q, failed_q, done_q, progress=None, task=None):
             print("Created.   : ", '{:5d}'.format(c), " Failed In Run:", '{:5d}'.format(f), end = "\r", flush = True)
             if msg_freq:
                 time.sleep(msg_freq)
+        if progress and progress.finished:
+            log_message(f'\nstart_time         : {run_dict["start_time"]}')
+            log_message(f'session_id           : {run_dict["session_id"]}')
+            log_message(f'number_of_statements : {run_dict["number_of_statements"]}')
+            log_message(f'number_of_created    : {created_q.qsize()}')
+            log_message(f'number_of_failed     : {failed_q.qsize()}')
+            log_message(f'parallelism.         : {parallelism}')
+            break
 
     #time.sleep(2)
     run_dict["number_of_created"] = created_q.qsize()
     run_dict["number_of_failed"] = failed_q.qsize()
     run_dict["end_time"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    print("                Total Created: ", '{:5d}'.format(run_dict["number_of_created"]), " Failed In Run:", '{:5d}'.format(run_dict["number_of_failed"]), end = "\r", flush = True)
-    print("\n")
-    print("            End time: ", run_dict["end_time"])
-    print("\n")
+    if not progress:
+        print("                Total Created: ", '{:5d}'.format(run_dict["number_of_created"]), " Failed In Run:", '{:5d}'.format(run_dict["number_of_failed"]), end = "\r", flush = True)
+        print("\n")
+        print("            End time: ", run_dict["end_time"])
+        print("\n")
     #time.sleep(20)
     while not done_q.empty():
         done_q.get()
@@ -364,13 +379,14 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     global parallelism
+    global total_staments
     stmnt_q = init(input_script, workspace, split, splitpattern, object_type)
     created_q = queue.Queue()
     failed_q = queue.Queue()
     done_q = queue.LifoQueue()
 
     no_of_stmnts = stmnt_q.qsize()
-
+    total_staments = no_of_stmnts
     tot_created_last_run_end = 0
 
     stmnt_q_cur_run = stmnt_q
@@ -393,7 +409,7 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
             for index, thread in enumerate(threads):
                 thread.join()
             if failed_q.qsize() == 0:
-                log_message("All objects successfully created.")
+                log_message("\nAll objects successfully created.")
                 con.close()
                 break
             if created_q.qsize() == tot_created_last_run_end:
@@ -410,8 +426,9 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
             failed_q = queue.Queue()
             run_num = run_num + 1
     else:
-        from rich.progress import Progress
-        with Progress() as progress:
+        from rich.progress import Progress, TimeElapsedColumn, MofNCompleteColumn
+
+        with Progress(*Progress.get_default_columns(),TimeElapsedColumn(),MofNCompleteColumn()) as progress:
             while True:
                 task = progress.add_task(f"Run [green]{run_num}...", total=no_of_stmnts_cur_run)
                 parallelism_val = calc_par(no_of_stmnts_cur_run, parallelism)
@@ -429,7 +446,7 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
                     progress.update(task,completed=no_of_stmnts_cur_run)
                     progress.update(task,visible=False)
                 if failed_q.qsize() == 0:
-                    log_message("All objects successfully created.")
+                    log_message("\nAll objects successfully created.")
                     con.close()
                     break
                 if created_q.qsize() == tot_created_last_run_end:
@@ -482,9 +499,7 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
             f.write("\n")
 
             if errno_dict.get(em["error_msg"].errno) != None:
-
                 error_file = errno_dict.get(em["error_msg"].errno)
-
             else:
                 error_name = str(decode_error(em["error_msg"].errno))
                 error_file = open(os.path.join(out_path,"error_" + str(execution_summary["session_id"]) + "_" + error_name + ".sql"), "w+")
@@ -525,7 +540,6 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
     f.close()
 
     for key in errno_dict:
-
         errno_dict[key].close()
 
     outfilename = os.path.join(out_path, f"execution_summary_{session_id}.json")
@@ -550,7 +564,7 @@ def str2bool(v):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(add_help=False,description=f"""
+    parser = argparse.ArgumentParser(description=f"""
     SnowConvertStudio Deployment Script v{DEPLOY_VERSION}
     ===================================
 
@@ -629,6 +643,7 @@ if __name__ == "__main__":
     msg_freq    = 10
     max_stmnt   = sys.maxsize
     parallelism = 0
+    total_staments = 0
     exclude_dirs= []
     ini_path = None
 
@@ -672,6 +687,8 @@ if __name__ == "__main__":
             if args.ActiveConn:
                 if args.ActiveConn != "default":
                     connectionSettingsSection = "connections." + args.ActiveConn
+            if not connectionSettingsSection in config:
+                raise Exception(f'Section [{connectionSettingsSection}] not found in {ini_path}')
             sf_password      = args.Password       or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
             sf_account       = args.Account        or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
             sf_warehouse     = args.Warehouse      or (config[connectionSettingsSection]['warehousename'] if 'warehousename' in config[connectionSettingsSection] else None)
@@ -680,7 +697,7 @@ if __name__ == "__main__":
             sf_schema        = args.Schema         or (config[connectionSettingsSection]['schemaname']    if 'schemaname'    in config[connectionSettingsSection] else None)
             sf_authenticator = args.authenticator  or (config[connectionSettingsSection]['authenticator'] if 'authenticator' in config[connectionSettingsSection] else None)
     except Exception as e:
-        log_message(f"Could not read [warning] {ini_path} [\warning] [cyan] {e}")
+        log_message(f"Could not read [warning] {ini_path} Skipping  [red] {e}")
 
     # If some settings are still pending try the arguments or environment variables
     sf_account      = args.Account or sf_account or os.getenv("SNOW_ACCOUNT") or os.getenv("SNOWSQL_ACCOUNT")

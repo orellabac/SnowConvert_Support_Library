@@ -49,4 +49,8 @@
 - Adding more  fixes for files in UTF-8 with BOM
 - Adding parameter for force prompt for password
 - Using rich for more colorful output
-- Adding try/catch for ini file parsing issue 
+- Adding try/catch for ini file parsing issue
+
+## Version 0.0.16
+
+- Fixing some display issues
