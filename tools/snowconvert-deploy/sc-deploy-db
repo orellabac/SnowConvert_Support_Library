@@ -23,7 +23,7 @@ import glob
 import shutil
 import snowflake.connector
 
-DEPLOY_VERSION = '0.0.16'
+DEPLOY_VERSION = '0.0.17'
 
 category_queries = {
     "table"            : "select TABLE_CATALOG     AS DB,TABLE_SCHEMA     AS SCHEMA,TABLE_NAME     AS NAME from information_schema.tables where TABLE_SCHEMA <> 'INFORMATION_SCHEMA' AND TABLE_TYPE='BASE TABLE'",
@@ -689,7 +689,8 @@ if __name__ == "__main__":
                     connectionSettingsSection = "connections." + args.ActiveConn
             if not connectionSettingsSection in config:
                 raise Exception(f'Section [{connectionSettingsSection}] not found in {ini_path}')
-            sf_password      = args.Password       or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
+            sf_password      = args.Password       or (config[connectionSettingsSection]['password']      if 'password'      in config[connectionSettingsSection] else None)
+            sf_user          = args.User           or (config[connectionSettingsSection]['username']      if 'username'      in config[connectionSettingsSection] else None)
             sf_account       = args.Account        or (config[connectionSettingsSection]['accountname']   if 'accountname'   in config[connectionSettingsSection] else None)
             sf_warehouse     = args.Warehouse      or (config[connectionSettingsSection]['warehousename'] if 'warehousename' in config[connectionSettingsSection] else None)
             sf_role          = args.Role           or (config[connectionSettingsSection]['rolename']      if 'rolename'      in config[connectionSettingsSection] else None)
@@ -700,13 +701,13 @@ if __name__ == "__main__":
         log_message(f"Could not read [warning] {ini_path} Skipping  [red] {e}")
 
     # If some settings are still pending try the arguments or environment variables
-    sf_account      = args.Account or sf_account or os.getenv("SNOW_ACCOUNT") or os.getenv("SNOWSQL_ACCOUNT")
+    sf_account      = args.Account   or sf_account   or os.getenv("SNOW_ACCOUNT")   or os.getenv("SNOWSQL_ACCOUNT")
     sf_warehouse    = args.Warehouse or sf_warehouse or os.getenv("SNOW_WAREHOUSE") or os.getenv("SNOWSQL_WAREHOUSE")
-    sf_role         = args.Role or sf_role or os.getenv("SNOW_ROLE") or os.getenv("SNOWSQL_ROLE")
-    sf_db           = args.Database or sf_db or os.getenv("SNOW_DATABASE") or os.getenv("SNOWSQL_DATABASE")
-    sf_user         = args.User or os.getenv("SNOW_USER") or os.getenv("SNOWSQL_USER")
-    sf_password     = args.Password or os.getenv("SNOW_PASSWORD") or os.getenv("SNOWSQL_PWD")
-    sf_schema       = args.Schema or os.getenv("SNOW_SCHEMA") or os.getenv("SNOWSQL_SCHEMA")
+    sf_role         = args.Role      or sf_role      or os.getenv("SNOW_ROLE")      or os.getenv("SNOWSQL_ROLE")
+    sf_db           = args.Database  or sf_db        or os.getenv("SNOW_DATABASE")  or os.getenv("SNOWSQL_DATABASE")
+    sf_user         = args.User      or sf_user      or os.getenv("SNOW_USER")      or os.getenv("SNOWSQL_USER")
+    sf_password     = args.Password  or sf_password  or os.getenv("SNOW_PASSWORD")  or os.getenv("SNOWSQL_PWD")
+    sf_schema       = args.Schema    or sf_schema    or os.getenv("SNOW_SCHEMA")    or os.getenv("SNOWSQL_SCHEMA")
 
     out_path     = args.LogPath
     msg_freq     = int(os.getenv('CI_MSG_FREQ') or 0)

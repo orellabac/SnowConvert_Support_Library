@@ -54,3 +54,7 @@
 ## Version 0.0.16
 
 - Fixing some display issues
+
+## Version 0.0.17
+
+- changes for reading user\password\schema from snowsql files
