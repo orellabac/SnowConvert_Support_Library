@@ -24,6 +24,9 @@ Also a lot of tools have limitations when deploying files that contain several c
 This tool has some options that can process the code inside the files, splitting it based on pattern before deployment helping 
 in those situations. Please read more about it the following sections.
 
+However starting on version 0.0.18 the tool can leverate the connector capabilities for running multiple statements.
+The split functionality has been left for cases where this may still be needed.
+
 Installation
 ------------
 

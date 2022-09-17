@@ -22,8 +22,9 @@ from collections import Counter
 import glob
 import shutil
 import snowflake.connector
+import atexit
 
-DEPLOY_VERSION = '0.0.17'
+DEPLOY_VERSION = '0.0.18'
 
 category_queries = {
     "table"            : "select TABLE_CATALOG     AS DB,TABLE_SCHEMA     AS SCHEMA,TABLE_NAME     AS NAME from information_schema.tables where TABLE_SCHEMA <> 'INFORMATION_SCHEMA' AND TABLE_TYPE='BASE TABLE'",
@@ -59,7 +60,10 @@ def sync_object_category(conn,category_name, input_dir, target_dir,files_in_db_b
             cur = conn.cursor()
             if category_name in category_queries:
                 sql = category_queries[category_name]
-                cur.execute(sql)
+                # execute string returns empty string errors for line comments, so
+                # we remove them to about that
+                sql = re.sub(LINE_COMMENT_REGEX,sql,"")
+                conn.execute_string(sql)
                 # Fetch the result set from the cursor and deliver it as the Pandas DataFrame.
                 df_category = cur.fetch_pandas_all()
                 # Now we will process all objects
@@ -124,20 +128,23 @@ def thread_function(con, index, max_stmnt, stmnt_q, created_q, failed_q, done_q,
     ebuf = []
     cur.execute("set quoted_identifiers_ignore_case = TRUE")
     cur.execute("alter session set TIMESTAMP_TYPE_MAPPING = TIMESTAMP_LTZ")
-    while True:
+    cur.close()
+    Continue = True
+    while Continue:
         if (stmnt_q.qsize() > 0) and ((created_q.qsize() + failed_q.qsize()) < max_stmnt):
-            (file,stmnt) = stmnt_q.get()
             try:
-                if progress:
-                    progress.update(task,advance=1)
-                cur.execute(stmnt)
+                (file,stmnt) = stmnt_q.get()
+                con.execute_string(stmnt)
                 created_q.put({"stmnt":stmnt,"file":file})
             except snowflake.connector.errors.ProgrammingError as e_stmt:
-                ebuf.append({"error_msg":e_stmt, "statement":stmnt, "file":file})
-                failed_q.put(ebuf[len(ebuf)-1])
+                failed_q.put({"error_msg":e_stmt, "statement":stmnt, "file":file})
+            except Exception as e:
+                failed_q.put({"error_msg":str(e), "statement":stmnt, "file":file})
+            finally:
+                if progress:
+                    progress.update(task,advance=1,created=created_q.qsize(),failed=failed_q.qsize())
         else:
-            break
-    cur.close()
+            Continue = False
     done_q.put(index)
     return
 
@@ -148,7 +155,6 @@ created_q, failed_q, done_q, progress=None, task=None):
     run_dict = {
                 "start_time": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
                 "session_id": session_id,
-                # "total_number_of_statements": total_staments,
                 "number_of_statements": no_of_stmnts,
                 "number_of_created": 0,
                 "number_of_failed": 0,
@@ -156,7 +162,6 @@ created_q, failed_q, done_q, progress=None, task=None):
                }
     c = 0
     f = 0
-
     if not progress:
         log_message(f'\nstart_time         : {run_dict["start_time"]}')
         log_message(f'session_id           : {run_dict["session_id"]}')
@@ -174,7 +179,7 @@ created_q, failed_q, done_q, progress=None, task=None):
             print("Created.   : ", '{:5d}'.format(c), " Failed In Run:", '{:5d}'.format(f), end = "\r", flush = True)
             if msg_freq:
                 time.sleep(msg_freq)
-        if progress and progress.finished:
+        if not progress:
             log_message(f'\nstart_time         : {run_dict["start_time"]}')
             log_message(f'session_id           : {run_dict["session_id"]}')
             log_message(f'number_of_statements : {run_dict["number_of_statements"]}')
@@ -182,8 +187,6 @@ created_q, failed_q, done_q, progress=None, task=None):
             log_message(f'number_of_failed     : {failed_q.qsize()}')
             log_message(f'parallelism.         : {parallelism}')
             break
-
-    #time.sleep(2)
     run_dict["number_of_created"] = created_q.qsize()
     run_dict["number_of_failed"] = failed_q.qsize()
     run_dict["end_time"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -192,7 +195,6 @@ created_q, failed_q, done_q, progress=None, task=None):
         print("\n")
         print("            End time: ", run_dict["end_time"])
         print("\n")
-    #time.sleep(20)
     while not done_q.empty():
         done_q.get()
     done_q.put(run_dict)
@@ -253,7 +255,7 @@ def init(input_directory, workspace, split, splitpattern, object_type):
     qualified_exclude_dirs = [os.path.join(input_directory,x) for x in exclude_dirs]
     if split == 1:
         print(f'Using SPLIT PATTERN BEFORE [{splitpattern}]')
-    if split == 2:
+    elif split == 2:
         print(f'Using SPLIT PATTERN AFTER [{splitpattern}]')
     for dirpath, _ , files in os.walk(input_directory):
         print(f'Processing directory: {dirpath}')
@@ -273,13 +275,12 @@ def init(input_directory, workspace, split, splitpattern, object_type):
                             addfile = False
 
                     if addfile:
-
                         f = open(full_path)
                         # queuing a tuple (path, contents, errors)
                         contents = f.read()
                         contents = remove_bom(contents)
                         if split:
-                            print(f"Processing file {full_path} ",end="")
+                            log_message(f"[grey82]Processing file {full_path} ")
                             # we need to remove empty comments because they can cause problems when splitting
                             contents_with_split_marks = re.sub(splitpattern, split_match,contents)
                             has_parts = len(contents_with_split_marks) > len(contents)
@@ -294,7 +295,7 @@ def init(input_directory, workspace, split, splitpattern, object_type):
                                 print("no parts, adding whole script")
                                 stmnt_q.put((full_path,contents))
                         else:
-                            print(f"Processing file {full_path}")
+                            log_message(f"[grey82] Processing file {full_path}")
                             stmnt_q.put((full_path,contents))
                         f.close()
     return stmnt_q
@@ -373,6 +374,7 @@ def open_connection() -> snowflake.connector.SnowflakeConnection:
         log_message(e_connection)
         exit(1)
 
+output_files_called = False
 def main(con,input_script, workspace, split, splitpattern, object_type):
     # delete old logs
     shutil.rmtree(out_path,ignore_errors=True)
@@ -391,7 +393,104 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
 
     stmnt_q_cur_run = stmnt_q
     no_of_stmnts_cur_run = no_of_stmnts
+    def wait_termination(threads,created_q,failed_q,max_stmnt):
+        joined_threads_count = 0
+        total_threads = len(threads)
+        threads_pending = True
+        while threads_pending:
+            joined_threads_count = 0
+            for index, thread in enumerate(threads):
+                thread.join(0.1)
+                if not thread.is_alive():
+                    joined_threads_count = joined_threads_count + 1
+            threads_pending = joined_threads_count < total_threads and \
+                 ((created_q.qsize() + failed_q.qsize()) < max_stmnt)
 
+    def create_output_files():
+        global output_files_called
+        if output_files_called:
+            return
+        output_files_called = True
+        if args.simple_output:
+            log_message("\nCreating output files...")
+        else:
+            log_message("\n:ledger: Creating output files...")       
+        if args.simple_output:
+            for info in list(done_q.queue):
+                if isinstance(info,dict):
+                    for item, val in info.items():  # dct.iteritems() in Python 2
+                        log_message("{} : {}".format(item.ljust(20), val))
+        # Sometimes there is an int
+        execution_summary_list = list(done_q.queue)
+        execution_summary = {"session_id":"default"}
+        if len(execution_summary_list):
+            for item in execution_summary_list:
+                if  not isinstance(item, int):
+                    execution_summary = item
+        session_id = execution_summary["session_id"]
+        list_created = list(created_q.queue)
+        if len(list_created):
+            outfilename = os.path.join(out_path, f"created_{session_id}.sql")
+            f = open(outfilename,"w")
+            outfilename = os.path.join(out_path, f"created_{session_id}.csv")
+            fcsv = open(outfilename,"w")
+            for e in list_created:
+                fcsv.write(e["file"] + "\n")
+                f.write(remove_error_msg(e["stmnt"]) + "\n")
+            f.close()
+            fcsv.close()
+        errno_dict = {}
+        error_list = []
+        list_failed = list(failed_q.queue)
+        if len(list_failed):
+            outfilename = os.path.join(out_path, f"failed_{session_id}.sql")
+            f = open(outfilename,"w")
+            for em in list_failed:
+                f.write(remove_error_msg(em["statement"]))
+                f.write("\n")
+                if errno_dict.get(em["error_msg"].errno) != None:
+                    error_file = errno_dict.get(em["error_msg"].errno)
+                else:
+                    error_name = str(decode_error(em["error_msg"].errno))
+                    error_file = open(os.path.join(out_path,"error_" + str(execution_summary["session_id"]) + "_" + error_name + ".sql"), "w+")
+                    errno_dict[em["error_msg"].errno] = error_file
+                i = em["statement"].find("</sc")
+                error_file.write(em["statement"][0:i] + "\n")
+                error_file.write('Error {0} ({1}): {2} ({3})'.format(em["error_msg"].errno, em["error_msg"].sqlstate, em["error_msg"].msg, em["error_msg"].sfqid))
+                error_file.write(em["statement"][i:])
+            for stmnt in list_failed:
+                error_name = str(decode_error(stmnt["error_msg"].errno))
+                error_list.append((stmnt["file"],error_name,stmnt["error_msg"].errno,stmnt["error_msg"].sqlstate,stmnt["error_msg"].msg,stmnt["error_msg"].sfqid,stmnt['statement']))
+        freq = Counter(error_list)
+        outfilename = os.path.join(out_path, f"error_summary_{session_id}.sql")
+        f = open(outfilename, "w+")
+        f.write(str(dict(freq)))    
+        f.close()
+        ## error summary
+        f = open(os.path.join(out_path , "error_list_summary.txt"), "w+")
+        for (file,error_name,errno, sqlstate, msg, sfqid,statement) in error_list:
+            msg = msg.replace('\n',' ')
+            report = f"ERROR ({error_name}) in FILE:[{file}] ERR:{errno} SQLSTATE: {sqlstate} MSG: {msg} QUERYID: {sfqid}"
+            f.write(report + "\n")
+        f.close()
+        ## error summary csv
+        f = open(os.path.join(out_path, f"error_list_summary_{session_id}.csv"), "w+")
+        f.write("key,path,error,message\n")
+        for (file,error_name,errno, sqlstate, msg, sfqid,statement) in error_list:
+            msg = msg.replace('\n',' ')
+            key = get_object_key(statement)
+            msg = msg.replace(",","-")
+            report = f"{key},{file},{error_name},{msg}"
+            f.write(report + "\n")
+        f.close()
+        for key in errno_dict:
+            errno_dict[key].close()
+        ## execution summary
+        outfilename = os.path.join(out_path, f"execution_summary_{session_id}.json")
+        f = open(outfilename, "w+")
+        f.write(json.dumps(execution_summary,indent=2, sort_keys=True))
+        f.close()
+    atexit.register(create_output_files)
     run_num = 1
     if args.simple_output:
         while True:
@@ -403,8 +502,11 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
                 x = threading.Thread(target=thread_function, args=(con, index, max_stmnt, stmnt_q_cur_run, created_q, failed_q, done_q))
                 threads.append(x)
                 x.start()
-            x = threading.Thread(target=msg_thread_function, args=(parallelism_val, msg_freq, con.session_id, no_of_stmnts_cur_run, created_q, failed_q, done_q, ))
-            threads.append(x)
+            if not args.simple_output:
+                # this thread is used for reporting progress
+                # but when using Rich output it is not needed
+                x = threading.Thread(target=msg_thread_function, args=(parallelism_val, msg_freq, con.session_id, no_of_stmnts_cur_run, created_q, failed_q, done_q, ))
+                threads.append(x)
             x.start()
             for index, thread in enumerate(threads):
                 thread.join()
@@ -412,7 +514,7 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
                 log_message("\nAll objects successfully created.")
                 con.close()
                 break
-            if created_q.qsize() == tot_created_last_run_end:
+            elif created_q.qsize() == tot_created_last_run_end:
                 log_message("\nNo new objects created in previous run. Ending recursive runs.")
                 con.close()
                 break
@@ -426,130 +528,50 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
             failed_q = queue.Queue()
             run_num = run_num + 1
     else:
-        from rich.progress import Progress, TimeElapsedColumn, MofNCompleteColumn
-
-        with Progress(*Progress.get_default_columns(),TimeElapsedColumn(),MofNCompleteColumn()) as progress:
-            while True:
-                task = progress.add_task(f"Run [green]{run_num}...", total=no_of_stmnts_cur_run)
+        from rich.progress import Progress, TimeElapsedColumn, MofNCompleteColumn,TextColumn
+        while True:
+            with Progress(*Progress.get_default_columns(),TimeElapsedColumn(),MofNCompleteColumn(),
+            TextColumn("[cyan] :white_check_mark: {task.fields[created]}/[red] :x: {task.fields[failed]}")) as progress:
+                task = progress.add_task(f"Run [green]{run_num}...", total=no_of_stmnts_cur_run,created="?",failed="?")
                 parallelism_val = calc_par(no_of_stmnts_cur_run, parallelism)
                 threads = list()
                 for index in range(parallelism_val):
-                    x = threading.Thread(target=thread_function, args=(con, index, max_stmnt, stmnt_q_cur_run, created_q, failed_q, done_q, progress, task))
+                    x = threading.Thread(target=thread_function, args=(con, index, no_of_stmnts, stmnt_q_cur_run, created_q, failed_q, done_q, progress, task))
                     threads.append(x)
                     x.start()
                 x = threading.Thread(target=msg_thread_function, args=(parallelism_val, msg_freq, con.session_id, no_of_stmnts_cur_run, created_q, failed_q, done_q,progress, task ))
                 threads.append(x)
                 x.start()
-                for index, thread in enumerate(threads):
-                    thread.join()
-                if progress:
-                    progress.update(task,completed=no_of_stmnts_cur_run)
-                    progress.update(task,visible=False)
+                wait_termination(threads,created_q, failed_q,no_of_stmnts)
                 if failed_q.qsize() == 0:
-                    log_message("\nAll objects successfully created.")
                     con.close()
                     break
-                if created_q.qsize() == tot_created_last_run_end:
-                    log_message("\nNo new objects created in previous run. Ending recursive runs.")
+                elif created_q.qsize() == tot_created_last_run_end:
                     con.close()
                     break
-                tot_created_last_run_end = created_q.qsize()
-                stmnt_q_cur_run = queue.Queue()
-                for stmnt in list(failed_q.queue):
-                    y = remove_error_msg(stmnt["statement"])
-                    stmnt_q_cur_run.put((stmnt["file"],y))
+                else:
+                    tot_created_last_run_end = created_q.qsize()
+                    stmnt_q_cur_run = queue.Queue()
+                    for stmnt in list(failed_q.queue):
+                        y = remove_error_msg(stmnt["statement"])
+                        stmnt_q_cur_run.put((stmnt["file"],y))
 
-                no_of_stmnts_cur_run = failed_q.qsize()
-                failed_q = queue.Queue()
-                run_num = run_num + 1
-
-    print("Creating output files...")
-    for info in list(done_q.queue):
-        if isinstance(info,dict):
-            for item, val in info.items():  # dct.iteritems() in Python 2
-                log_message("{} : {}".format(item.ljust(20), val))
-    execution_summary = 1
-    # Sometimes there is an int
-    while isinstance(execution_summary, int):
-        execution_summary = done_q.get()
-
-    session_id = execution_summary["session_id"]
-
-    list_created = list(created_q.queue)
-    if len(list_created):
-        outfilename = os.path.join(out_path, f"created_{session_id}.sql")
-        f = open(outfilename,"w")
-        outfilename = os.path.join(out_path, f"created_{session_id}.csv")
-        fcsv = open(outfilename,"w")
-        for e in list_created:
-            fcsv.write(e["file"] + "\n")
-            f.write(remove_error_msg(e["stmnt"]) + "\n")
-        f.close()
-        fcsv.close()
-
-    errno_dict = {}
-    error_list = []
-
-    list_failed = list(failed_q.queue)
-    if len(list_failed):
-        outfilename = os.path.join(out_path, f"failed_{session_id}.sql")
-        f = open(outfilename,"w")
-        for em in list_failed:
-            f.write(remove_error_msg(em["statement"]))
-            f.write("\n")
-
-            if errno_dict.get(em["error_msg"].errno) != None:
-                error_file = errno_dict.get(em["error_msg"].errno)
-            else:
-                error_name = str(decode_error(em["error_msg"].errno))
-                error_file = open(os.path.join(out_path,"error_" + str(execution_summary["session_id"]) + "_" + error_name + ".sql"), "w+")
-                errno_dict[em["error_msg"].errno] = error_file
-
-            i = em["statement"].find("</sc")
-            error_file.write(em["statement"][0:i] + "\n")
-            error_file.write('Error {0} ({1}): {2} ({3})'.format(em["error_msg"].errno, em["error_msg"].sqlstate, em["error_msg"].msg, em["error_msg"].sfqid))
-            error_file.write(em["statement"][i:])
-
-
-        for stmnt in list_failed:
-            error_name = str(decode_error(stmnt["error_msg"].errno))
-            error_list.append((stmnt["file"],error_name,stmnt["error_msg"].errno,stmnt["error_msg"].sqlstate,stmnt["error_msg"].msg,stmnt["error_msg"].sfqid,stmnt['statement']))
-
-    freq = Counter(error_list)
-
-    outfilename = os.path.join(out_path, f"error_summary_{session_id}.sql")
-    f = open(outfilename, "w+")
-    f.write(str(freq))
-    f.close()
-
-    f = open(os.path.join(out_path , "error_list_summary.txt"), "w+")
-    for (file,error_name,errno, sqlstate, msg, sfqid,statement) in error_list:
-        msg = msg.replace('\n',' ')
-        report = f"ERROR ({error_name}) in FILE:[{file}] ERR:{errno} SQLSTATE: {sqlstate} MSG: {msg} QUERYID: {sfqid}"
-        f.write(report + "\n")
-    f.close()
-
-    f = open(os.path.join(out_path, f"error_list_summary_{session_id}.csv"), "w+")
-    f.write("key,path,error,message\n")
-    for (file,error_name,errno, sqlstate, msg, sfqid,statement) in error_list:
-        msg = msg.replace('\n',' ')
-        key = get_object_key(statement)
-        msg = msg.replace(",","-")
-        report = f"{key},{file},{error_name},{msg}"
-        f.write(report + "\n")
-    f.close()
-
-    for key in errno_dict:
-        errno_dict[key].close()
-
-    outfilename = os.path.join(out_path, f"execution_summary_{session_id}.json")
-    f = open(outfilename, "w+")
-    f.write(json.dumps(execution_summary,indent=2, sort_keys=True))
-    f.close()
+                    no_of_stmnts_cur_run = failed_q.qsize()
+                    failed_q = queue.Queue()
+                    run_num = run_num + 1
+        if failed_q.qsize() == 0:
+            log_message("\nAll objects successfully created.")
+        elif created_q.qsize() == tot_created_last_run_end:
+            log_message("\nNo new objects created in previous run. Ending recursive runs.")
+        if failed_q.qsize() > 0:
+            log_message("\n[red] :eyes: Some objects were not created.")
 
     ## Process done
-    print("\nDone")
-    sys.exit(len(error_list))
+    if args.simple_output:
+        log_message("\n Done")
+    else:
+        log_message("\n:checkered_flag: Done")
+    #sys.exit(len(error_list))
     return
 
 def str2bool(v):
@@ -592,6 +614,7 @@ if __name__ == "__main__":
     parser.add_argument("--token",required=False,help="Token for oauth authentication",default=None)
     parser.add_argument("--authenticator",             dest="authenticator", help = "Use the authenticator with you want to use a different authentication mechanism")
     parser.add_argument("-L","--LogPath",              dest="LogPath",   help = "Path for process logs. Defaults to current dir",default=os.path.join(os.getcwd(),"logs"))
+    parser.add_argument("--UseMultiStats", help = "Use snowflake python connector support for multiple stats", default=True)
     parser.add_argument("--SplitBefore", help = "Regular expression that can be used to split code in fragments starting **BEFORE** the matching expression")
     parser.add_argument("--SplitAfter",  help = "Regular expression that can be used to split code in fragments starting **AFTER** the matching expression")
     parser.add_argument("--ObjectType",  help = "Object Type to deploy table,view,procedure,function,macro", nargs='?', default="")
@@ -601,7 +624,8 @@ if __name__ == "__main__":
     parser.add_argument("--simple-output",required=False,help = "disables the usage of colors and other terminal effects")  
 
     args = parser.parse_args()
-    TAG = re.compile(r"\[\w+\]")
+    TAG = re.compile(r"(\[\\?\w+\]|:\w+:)")
+    LINE_COMMENT_REGEX = re.compile(r"^\s*--.*?\n")
 
     if not args.simple_output:
         from rich.console import Console
@@ -632,7 +656,7 @@ if __name__ == "__main__":
         input_script = args.InPath
         log_message(f"Using InputPath = [cyan]{input_script}")
     else:
-        log_message(f"Input Path for SQL scripts does not exist: [red]{args.InPath}")
+        log_message(f":eyes: Input Path for SQL scripts does not exist: [red]{args.InPath}")
         sys.exit(0)
 
 
@@ -719,6 +743,8 @@ if __name__ == "__main__":
     else:
         if args.SplitAfter:
             split = 2
+    if args.UseMultiStats:
+        split = None        
     if args.AskPassword:
         from getpass import getpass
         sf_password = getpass()

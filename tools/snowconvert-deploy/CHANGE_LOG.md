@@ -58,3 +58,10 @@
 ## Version 0.0.17
 
 - changes for reading user\password\schema from snowsql files
+
+## Version 0.0.18
+
+- several revisions on threading management
+- fixing some issues where reported numbers where not accurate
+- changing the display for recursive runs
+- log results output revision
