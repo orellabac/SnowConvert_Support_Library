@@ -24,7 +24,7 @@ import shutil
 import snowflake.connector
 import atexit
 
-DEPLOY_VERSION = '0.0.18'
+DEPLOY_VERSION = '0.0.19'
 
 category_queries = {
     "table"            : "select TABLE_CATALOG     AS DB,TABLE_SCHEMA     AS SCHEMA,TABLE_NAME     AS NAME from information_schema.tables where TABLE_SCHEMA <> 'INFORMATION_SCHEMA' AND TABLE_TYPE='BASE TABLE'",

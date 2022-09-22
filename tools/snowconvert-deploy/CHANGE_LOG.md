@@ -65,3 +65,7 @@
 - fixing some issues where reported numbers where not accurate
 - changing the display for recursive runs
 - log results output revision
+
+## Version 0.0.19
+
+- changes in github actions
