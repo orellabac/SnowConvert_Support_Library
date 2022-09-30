@@ -24,7 +24,7 @@ import shutil
 import snowflake.connector
 import atexit
 
-DEPLOY_VERSION = '0.0.19'
+DEPLOY_VERSION = '0.0.20'
 
 category_queries = {
     "table"            : "select TABLE_CATALOG     AS DB,TABLE_SCHEMA     AS SCHEMA,TABLE_NAME     AS NAME from information_schema.tables where TABLE_SCHEMA <> 'INFORMATION_SCHEMA' AND TABLE_TYPE='BASE TABLE'",
@@ -571,7 +571,8 @@ def main(con,input_script, workspace, split, splitpattern, object_type):
         log_message("\n Done")
     else:
         log_message("\n:checkered_flag: Done")
-    #sys.exit(len(error_list))
+    create_output_files()
+    os._exit(failed_q.qsize())
     return
 
 def str2bool(v):

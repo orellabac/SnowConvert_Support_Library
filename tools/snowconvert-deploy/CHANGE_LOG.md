@@ -69,3 +69,7 @@
 ## Version 0.0.19
 
 - changes in github actions
+
+## Version 0.0.20
+
+- we found some thread not always ending, adding force exit to avoid that
