@@ -231,6 +231,14 @@ SnowSQL does not like BOM so we need to remove them
         contents = contents[1:]
     return contents
 
+def apply_parameters(contents):
+    params = sf_deploy_parameters.keys()
+    for p in params:
+        param=f"{sf_deploy_parameter_prefix}{{{p}}}{sf_deploy_parameter_postfix}"
+        contents=contents.replace(param,sf_deploy_parameters[p])
+        param=f"{sf_deploy_parameter_prefix}{p}{sf_deploy_parameter_postfix}"
+        contents=contents.replace(param,sf_deploy_parameters[p])
+    return contents
 
 def init(input_directory, workspace, split, splitpattern, object_type):
     delimiter = "@@SPLIT@@"
@@ -279,6 +287,7 @@ def init(input_directory, workspace, split, splitpattern, object_type):
                         # queuing a tuple (path, contents, errors)
                         contents = f.read()
                         contents = remove_bom(contents)
+                        contents = apply_parameters(contents)
                         if split:
                             log_message(f"[grey82]Processing file {full_path} ")
                             # we need to remove empty comments because they can cause problems when splitting
@@ -623,6 +632,9 @@ if __name__ == "__main__":
     parser.add_argument("--sync-folder-target",required=False,  help = "Target folder where the lastest version of the scripts is kept")
     parser.add_argument("--sync-folder-categories",required=False,  help = "It is expected that the workdir will organize code in folders like [table,view,function,macro,procedure]. This parameter is a comma separated list of the categories you would like to sync")
     parser.add_argument("--simple-output",required=False,help = "disables the usage of colors and other terminal effects")  
+    parser.add_argument("--param",action='append', help="substitution parameter that will be applied before deployment they are expected to be like --param paramName=Value ")
+    parser.add_argument("--param-prefix",help="Prefix to use for your parameters by default it is &",default="&")
+    parser.add_argument("--param-postfix",help="Prefix to use for your parameters by default is None",default="")
 
     args = parser.parse_args()
     TAG = re.compile(r"(\[\\?\w+\]|:\w+:)")
@@ -682,6 +694,9 @@ if __name__ == "__main__":
     sf_authenticator = None
     sf_application   = None
     sf_role          = None
+    sf_deploy_parameters = {}
+    sf_deploy_parameter_prefix = ""
+    sf_deploy_parameter_postfix = ""
 
     # First try to find a config_snowsql.ini file
     if args.Workspace and os.path.exists(os.path.join(args.Workspace,'config_snowsql.ini')):
@@ -701,7 +716,15 @@ if __name__ == "__main__":
     sf_schema        = args.Schema       
     sf_authenticator = args.authenticator
 
-
+    if args.param:
+        for raw_param in args.param:
+            parts = raw_param.split("=",1)
+            if parts and len(parts)==2:
+                key = parts[0]
+                val = parts[1]
+                sf_deploy_parameters[key] = val
+        sf_deploy_parameter_prefix  = args.param_prefix
+        sf_deploy_parameter_postfix = args.param_postfix
 
     # if an ini file was found read some settings from there
     # we avoid reading user and password from this file

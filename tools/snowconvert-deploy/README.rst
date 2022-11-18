@@ -59,8 +59,8 @@ Tool Options
 .. code:: bash
 
     usage: sc-deploy-db [-h] [-A ACCOUNT] [-D DATABASE] [-WH WAREHOUSE] [-R ROLE] [-U USER] [-P PASSWORD] [--AskPassword] [-W WORKSPACE] -I INPATH
-                    [--activeConn ACTIVECONN] [--authenticator AUTHENTICATOR] [-L LOGPATH] [--SplitBefore SPLITBEFORE] [--SplitAfter SPLITAFTER]
-                    [--ObjectType [OBJECTTYPE]]
+                    [--activeConn ACTIVECONN] [--authenticator AUTHENTICATOR]  [--UseMultiStats USEMULTISTATS] [-L LOGPATH] [--SplitBefore SPLITBEFORE] [--SplitAfter SPLITAFTER]
+                    [--ObjectType [OBJECTTYPE]] [--param PARAM] [--param-prefix PARAM_PREFIX] [--param-postfix PARAM_POSTFIX]
 
     SnowConvertStudio Deployment Script
     ===================================
@@ -110,6 +110,14 @@ Tool Options
     --sync-folder-categories SYNC_FOLDER_CATEGORIES
                         It is expected that the workdir will organize code in folders like [table,view,function,macro,procedure]. This
                         parameter is a comma separated list of the categories you would like to sync                          
+    --simple-output SIMPLE_OUTPUT
+                          disables the usage of colors and other terminal effects
+    --param PARAM         substitution parameter that will be applied before deployment they are
+                          expected to be like --param paramName=Value
+    --param-prefix PARAM_PREFIX
+                          Prefix to use for your parameters by default it is &
+    --param-postfix PARAM_POSTFIX
+                          Prefix to use for your parameters by default is None
 
 This tool assumes :
 
@@ -241,6 +249,26 @@ You can also use something like:
     sc-deploy-db -A my_sf_account -WH my_wh -U user -P password -I code  --SplitBefore '\/\*[^\*]*\*\/'
 
 To split before a block comment
+
+Substitution parameters
+-----------------------
+
+Sometimes you need to add some substitution parameters for example:
+
+::
+
+    create or replace table &env_TABLE1 ( NAME VARCHAR(100), LAST_NAME VARCHAR(200));
+
+You can then call the deployment script like `sc-deploy-db --param env=PROD` then the tool will deploy:
+
+::
+
+    create or replace table PROD_TABLE1 ( NAME VARCHAR(100), LAST_NAME VARCHAR(200));
+
+By default variables are expected like `&var` or `&{var}`. You can also customize the prefix. 
+
+For example `--param-prefix "$"` will allow you to use vars like `$var` or `${var}`.
+For example `--param-prefix "<" --param-postfix ">"` will allow you to use vars like `<var>` or `<{var}>`.
 
 
 Folder Syncronization
