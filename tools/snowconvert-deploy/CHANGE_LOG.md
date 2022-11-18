@@ -73,3 +73,11 @@
 ## Version 0.0.20
 
 - we found some thread not always ending, adding force exit to avoid that
+
+## Version 0.0.21-0.0.23
+
+- some build issues
+
+## Version 0.0.24
+
+- implemented mechanism for parameter substitution
